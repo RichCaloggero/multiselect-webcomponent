@@ -117,8 +117,8 @@
         }
     </style>
 
-    <div class="multiselect" role="combobox">
-        <div class="multiselect-field" tabindex="0"></div>
+    <div class="multiselect" role="combobox" aria-expanded="false">
+        <div class="multiselect-field" role="group" tabindex="0" aria-haspopup="listbox"></div>
         <div class="multiselect-popup">
             <ul class="multiselect-list" role="listbox" aria-multiselectable="true">
                 <content select="li"></content>
@@ -137,7 +137,7 @@
         multiselectPrototype.createdCallback = function() {
             this.init();
             this.render();
-        };
+};
 
         multiselectPrototype.init = function() {
             this.initOptions();
@@ -147,11 +147,13 @@
             this._field = this._root.querySelector('.multiselect-field');
             this._popup = this._root.querySelector('.multiselect-popup');
             this._list = this._root.querySelector('.multiselect-list');
-        };
+        this._field.setAttribute ("aria-label", this._options.label);
+};
 
         multiselectPrototype.initOptions = function() {
             this._options = {
-                placeholder: this.getAttribute("placeholder") || 'Select'
+                placeholder: this.getAttribute("placeholder") || 'Select',
+label: this.getAttribute("label") || ''
             };
         };
 
@@ -201,8 +203,8 @@
                     event.altKey ? this.handleAltArrowDownKey() : this.handleArrowDownKey();
                     break;
                 default:
-                    return;
-            }
+                    return true;
+            } // switch
             event.preventDefault();
         };
 
@@ -210,7 +212,9 @@
             if(this._isOpened) {
                 var focusedItem = this.itemElements()[this._focusedItemIndex];
                 this.selectItem(focusedItem);
-            }
+            } else {
+this.open ();
+} // if
         };
 
         multiselectPrototype.handleArrowDownKey = function() {
@@ -310,7 +314,7 @@
             }
 
             this._focusedItemIndex = 0;
-        };
+};
 
         multiselectPrototype.itemElements = function() {
             return this.querySelectorAll('li');
@@ -388,4 +392,7 @@
         });
 
     }());
+
+alert ("multiselect component loaded");
+
 </script>
