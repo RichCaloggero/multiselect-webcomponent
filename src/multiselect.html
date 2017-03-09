@@ -293,7 +293,7 @@ this.open ();
 
             var selectedItems = this.querySelectorAll('li[selected]');
 
-            if(!selectedItems.length) {
+            if(! selectedItems.length) {
                 this._field.appendChild(this.createPlaceholder());
                 return;
             }
@@ -328,19 +328,19 @@ this.open ();
         };
 
         multiselectPrototype.createTag = function(item) {
-            var tag = document.createElement('div');
+            var tag = document.createElement('button');
             tag.className = 'multiselect-tag';
 
-            var content = document.createElement('div');
+            var content = document.createElement('span');
             content.className = 'multiselect-tag-text';
             content.textContent = item.textContent;
 
-            var removeButton = document.createElement('div');
-            removeButton.className = 'multiselect-tag-remove-button';
-            removeButton.addEventListener('click', this.removeTag.bind(this, tag, item));
+            //var removeButton = document.createElement('div');
+            //removeButton.className = 'multiselect-tag-remove-button';
+            tag.addEventListener('click', this.removeTag.bind(this, tag, item));
 
             tag.appendChild(content);
-            tag.appendChild(removeButton);
+            //tag.appendChild(removeButton);
 
             return tag;
         };
