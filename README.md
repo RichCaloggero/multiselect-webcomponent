@@ -7,7 +7,7 @@ A multiselect widget created using [Web Components](https://www.w3.org/TR/compon
 
 ## Demo
 
-[Multiselect Demo](https://raw.githubusercontent.com/RichCaloggero/multiselect-webcomponent/master/demo/index.html)
+[Multiselect Demo](https://github.com/RichCaloggero/multiselect-webcomponent/blob/master/demo/index.html)
 
 
 ## Usage
