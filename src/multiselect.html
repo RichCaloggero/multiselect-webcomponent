@@ -137,6 +137,10 @@ var ownerDocument = (document._currentScript || document.currentScript).ownerDoc
 var template = ownerDocument.querySelector('#multiselectTemplate');
 
 (function() {
+var searchTimer = null;
+var searchText = "";
+var filterText = "";
+
 var multiselectPrototype = Object.create(HTMLElement.prototype);
 
 multiselectPrototype.createdCallback = function() {
@@ -186,14 +190,19 @@ this.refreshItems();
 multiselectPrototype.attachHandlers = function() {
 this._field.addEventListener('click', this.fieldClickHandler.bind(this));
 this._control.addEventListener('keydown', this.keyDownHandler.bind(this));
+
 this._list.addEventListener('click', this.listClickHandler.bind(this));
+this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
+
 };
 
 multiselectPrototype.fieldClickHandler = function() {
-this._isOpened ? this.close() : this.open();
+//this._isOpened ? this.close() : this.open();
 };
 
 multiselectPrototype.keyDownHandler = function(event) {
+stopTimer ();
+
 switch(event.which) {
 case 8:
     this.handleBackspaceKey();
@@ -214,9 +223,36 @@ default:
     return true;
 } // switch
 event.preventDefault();
+
 }; // keydown handler
 
 // individual key handlers
+
+multiselectPrototype.handleListSearch = function (e) {
+var self = this;
+var character = e.char || String.fromCharCode (e.which || e.keyCode);
+if (! isAlphanumeric(character)) return true;
+searchText += character;
+searchTimer = setTimeout (function () {
+self.searchList (searchText);
+searchText = "";
+}, this.searchTimeout || 200); // milliseconds
+}; // handleListSearch
+
+multiselectPrototype.searchList = function (text) {
+var index = Array.from(this.itemElements()).findIndex(function (element) {
+return element.textContent.toLowerCase().startsWith (text.toLowerCase());
+});
+
+if (index >= 0) {
+this._focusedItemIndex = index;
+this.refreshFocusedItem ();
+return index;
+} // if
+
+return -1;
+}; // searchList
+
 multiselectPrototype.handleEnterKey = function(e) {
 if(this._isOpened) {
 var focusedItem = this.itemElements()[this._focusedItemIndex];
@@ -237,6 +273,7 @@ this._focusedItemIndex = (this._focusedItemIndex < this.itemElements().length - 
     : 0;
 
 this.refreshFocusedItem();
+//alert ("focus item " + this._focusedItemIndex);
 };
 
 multiselectPrototype.handleArrowUpKey = function() {
@@ -290,6 +327,7 @@ item.setAttribute('aria-selected', "true");
 item.removeAttribute('selected');
 item.setAttribute('aria-selected', "false");
 } // if
+
 this.fireChangeEvent();
 this.refreshField();
 //this.refreshFocusedItem ();
@@ -400,6 +438,18 @@ this.togglePopup(false);
 this._typeahead.focus();
 };
 
+multiselectPrototype.search = function (text) {
+} // search
+
+multiselectPrototype.collectText = function (text) {
+this.searchText += text;
+} // collectText
+
+
+multiselectPrototype.value = function (_value) {
+}; // value
+
+
 multiselectPrototype.selectedItems = function() {
 var result = [];
 var selectedItems = this.querySelectorAll('li[selected]');
@@ -419,8 +469,19 @@ document.registerElement('x-multiselect', {
 prototype: multiselectPrototype
 });
 
-}());
+/// helpers
+
+function stopTimer () {
+clearTimeout (searchTimer);
+} // stopTimer
+
+function isAlphanumeric (x) {
+var result = /\w/.test (x);
+//alert ("isAlphanumeric " + x + " is " + result);
+return result;
+} // isAlphanumeric
+
+})();
 
 alert ("multiselect component loaded");
-
 </script>
