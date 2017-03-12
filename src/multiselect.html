@@ -172,12 +172,16 @@ this._list = this._root.querySelector('.multiselect-list');
 this._status = this._root.querySelector('.status');
 
 this._labelText.textContent = this._options.label;
+this._status.style.display = (options.showStatusMessages)?
+"block" : "none";
+
 }; // init
 
 multiselectPrototype.initOptions = function() {
 this._options = {
 placeholder: this.getAttribute("placeholder") || 'Select',
-label: this.getAttribute("label") || ''
+label: this.getAttribute("label") || '',
+showStatusMessages: this.getAttribute("showStatusMessages")
 };
 };
 
@@ -381,8 +385,9 @@ item.setAttribute('aria-selected', "false");
 
 this.fireChangeEvent();
 this.refreshField();
-//this.refreshFocusedItem ();
+this.displayItemCount ("items selected");
 
+//this.refreshFocusedItem ();
 //this.close();
 }; // selectItem
 
