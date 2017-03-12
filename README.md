@@ -13,7 +13,7 @@ This repository forked from
 ## Changes From Original
 
 - Fixed Accessibility 
-	+ added messages to indicate item and selected item counts as they change via live region
+	+ added messages to indicate item and selected item counts as they change (used `aria` live region to cause screen reader to announce dynamically)
 	+ updated keyboard Commands (list at end of this document)
 	+ Current selection indicated by buttons rather than separate text and remove button
 	+ wrapped the current selection buttons in div with role of group and appropriate `aria-label`
@@ -21,6 +21,10 @@ This repository forked from
 	+ downArrow opens and focuses in list if in input field or currentSelection region
 - Added First Letter Navigation in List 
 - Added Search / Filtering
+- added new attributes to html element
+	+ label: label spoken by screen reader when input field gains focus
+	+ showStatusMessages: true to cause status messages meant for screen readers to be shown on-screen
+	+ placeholder: still available as per original (see below)
 
 
 ## Usage
