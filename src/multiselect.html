@@ -275,6 +275,7 @@ this.filterList (this._typeahead.value);
 
 multiselectPrototype.filterList = function (text) {
 this.restoreList ();
+this.unselectAll ();
 
 if (text) {
 text = text.toLowerCase();
@@ -287,12 +288,20 @@ this.displayItemCount ();
 } // filterList 
 
 multiselectPrototype.selectedElements = function () {
-return Array.from(this.querySelectorAll ("li.selected"));
+return this.itemElements().filter ((x) => x.hasAttribute("selected"));
 }; // selectedElements
 
 multiselectPrototype.allElements = function () {
 return Array.from(this.querySelectorAll("li"));
 } // allElements
+
+multiselectPrototype.selectAll = function () {
+this.allElements().forEach ((x) => this.selectItem(x), this);
+} // selectAll
+
+multiselectPrototype.unselectAll = function () {
+this.allElements().forEach ((x) => this.unselectItem(x), this);
+} // unselectAll
 
 multiselectPrototype.restoreList = function () {
 this.allElements().forEach (function (element) {
@@ -306,10 +315,14 @@ this.refreshItems ();
 multiselectPrototype.handleEnterKey = function(e) {
 if(this._isOpened) {
 var focusedItem = this.itemElements()[this._focusedItemIndex];
-this.selectItem(focusedItem);
+
+if (focusedItem.hasAttribute("selected")) this.unselectItem (focusedItem);
+else this.selectItem (focusedItem);
+
+this.displayItemCount ("selected items");
 e.stopPropagation ();
 } // if
-};
+}; // handleEnterKey
 
 multiselectPrototype.handleArrowDownKey = function() {
 if (! this._isOpened) {
@@ -361,8 +374,9 @@ this.unselectItem(selectedItemElements[selectedItemElements.length - 1]);
 
 multiselectPrototype.handleEscapeKey = function() {
 this.close();
+this._typeahead.value = "";
 this.restoreList ();
-};
+}; // handleEscapeKey
 
 multiselectPrototype.listClickHandler = function(event) {
 var item = event.target;
@@ -374,21 +388,22 @@ this.selectItem(item);
 };
 
 multiselectPrototype.selectItem = function(item) {
-if(!item.hasAttribute('selected')) {
 item.setAttribute('selected', 'selected');
 item.setAttribute('aria-selected', "true");
-} else {
-item.removeAttribute('selected');
-item.setAttribute('aria-selected', "false");
-} // if
 
 this.fireChangeEvent();
 this.refreshField();
-this.displayItemCount ("items selected");
 
 //this.refreshFocusedItem ();
 //this.close();
 }; // selectItem
+
+multiselectPrototype.unselectItem = function(item) {
+item.removeAttribute('selected');
+item.setAttribute('aria-selected', false);
+this.fireChangeEvent();
+this.refreshField();
+}; // unselectItem
 
 multiselectPrototype.fireChangeEvent = function() {
 var event = new CustomEvent("change");
@@ -403,8 +418,7 @@ this._control.setAttribute("aria-expanded", show? "true" : "false");
 
 multiselectPrototype.refreshField = function() {
 this._field.innerHTML = '';
-
-var selectedItems = this.querySelectorAll('li[selected]');
+var selectedItems = this.selectedElements();
 
 if(! selectedItems.length) {
 this._field.appendChild(this.createPlaceholder());
@@ -431,9 +445,10 @@ this._focusedItemIndex = 0;
 
 
 multiselectPrototype.itemElements = function(selector) {
+var items;
 selector = selector || "li:not([hidden])";
-var items = this.querySelectorAll(selector);
-return items;
+items = this.querySelectorAll(selector);
+return Array.from(items);
 };
 
 multiselectPrototype.createPlaceholder = function() {
@@ -474,12 +489,6 @@ _field.firstChild.focus();
 //}, 50);
 }; // removeTag
 
-multiselectPrototype.unselectItem = function(item) {
-item.removeAttribute('selected');
-item.setAttribute('aria-selected', false);
-this.fireChangeEvent();
-this.refreshField();
-};
 
 multiselectPrototype.attributeChangedCallback = function(optionName, oldValue, newValue) {
 this._options[optionName] = newValue;
@@ -528,7 +537,9 @@ return result;
 }; // selectedItems
 
 multiselectPrototype.displayItemCount = function (text) {
-var message = this.itemElements().length;
+var message = (text)?
+this.selectedElements().length 
+: this.itemElements().length;
 message += " " + (text || "items");
 this.statusMessage (message);
 } // displayItemCount
