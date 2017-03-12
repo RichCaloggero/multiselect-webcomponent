@@ -2,7 +2,8 @@
 
 A multiselect widget created using [Web Components](https://www.w3.org/TR/components-intro/).
 
-![multiselect web component](http://tabalinas.github.io/multiselect-web-component/images/demo.png)
+This repository forked from
+![multiselect web component](https://github.com/sitepoint-editors/multiselect-web-component)
 
 
 ## Demo
@@ -64,6 +65,21 @@ multiselect.addEventListener('change', function() {
     console.log('Selected items:', this.selectedItems());
 });
 ```
+
+### Keyboard Commands
+
+The following keyboard commands are implemented:
+
+- tab: moves among parts of the widget
+- downArrow:
+	+ when in input field will open list and move to first item
+	+ when in list moves to next item
+- upArrow:
+	+ moves among items in list
+- alphanumerics in input field will filter list
+	+ backspace will delete a character from the input and adjust filter accordingly
++ escape closes and returns list to its unfiltered state
+
 
 ## Browser Support
 
