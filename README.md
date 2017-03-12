@@ -10,6 +10,18 @@ This repository forked from
 
 [Multiselect Demo](demo/index.html)
 
+## Changes From Original
+
+- Fixed Accessibility 
+	+ added messages to indicate item and selected item counts as they change via live region
+	+ updated keyboard Commands (list at end of this document)
+	+ Current selection indicated by buttons rather than separate text and remove button
+	+ wrapped the current selection buttons in div with role of group and appropriate `aria-label`
+	+ enter toggles selection from within list and does not close list
+	+ downArrow opens and focuses in list if in input field or currentSelection region
+- Added First Letter Navigation in List 
+- Added Search / Filtering
+
 
 ## Usage
 
