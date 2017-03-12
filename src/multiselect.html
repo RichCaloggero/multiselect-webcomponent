@@ -172,8 +172,7 @@ this._list = this._root.querySelector('.multiselect-list');
 this._status = this._root.querySelector('.status');
 
 this._labelText.textContent = this._options.label;
-this._status.style.display = (this._options.showStatusMessages)?
-"block" : "none";
+this._status.classList.toggle ("screen-reader-only", !this._options.showStatusMessages);
 
 }; // init
 
