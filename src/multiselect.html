@@ -249,6 +249,7 @@ var self = this;
 var character = e.char || String.fromCharCode (e.which || e.keyCode);
 if (! isAlphanumeric(character)) return true;
 searchText += character;
+
 searchTimer = setTimeout (function () {
 self.searchList (searchText);
 searchText = "";
@@ -256,9 +257,9 @@ searchText = "";
 }; // handleListSearch
 
 multiselectPrototype.searchList = function (text) {
-var index = Array.from(this.itemElements()).findIndex(function (element) {
+var index = findIndex(this.itemElements(), function (element) {
 return element.textContent.toLowerCase().startsWith (text.toLowerCase());
-});
+}, this._focusedItemIndex);
 
 if (index >= 0) {
 this._focusedItemIndex = index;
@@ -267,6 +268,27 @@ return index;
 } // if
 
 return -1;
+
+function findIndex (list, test, start) {
+start = start || 0;
+var length = list.length;
+
+if (length === 0) return -1;
+if (start < 0) start = length+start;
+start = (start+1) % length;
+
+for (var i=start; i<length; i++) {
+if (test(list[i])) return i;
+} // for
+
+if (start > 0) {
+for (var i=0; i<start; i++) {
+if (test(list[i])) return i;
+} // for
+} // if
+
+return -1;
+} // findIndex
 }; // searchList
 
 multiselectPrototype.handleListFilter = function () {
@@ -296,11 +318,11 @@ return Array.from(this.querySelectorAll("li"));
 } // allElements
 
 multiselectPrototype.selectAll = function () {
-this.allElements().forEach ((x) => this.selectItem(x), this);
+this.allElements().forEach ((x) => this.selectItem(x));
 } // selectAll
 
 multiselectPrototype.unselectAll = function () {
-this.allElements().forEach ((x) => this.unselectItem(x), this);
+this.allElements().forEach ((x) => this.unselectItem(x));
 } // unselectAll
 
 multiselectPrototype.restoreList = function () {
