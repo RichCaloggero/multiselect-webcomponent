@@ -126,7 +126,7 @@ background: #e9e9e9;
 <div class="multiselect" role="combobox" aria-expanded="false">
 <label>
 <span class="text"></span>
-<input type="text" class="typeahead">
+<br><input type="text" class="typeahead">
 </label>
 
 <div class="multiselect-field" role="group" aria-label="Current Selection"></div>
@@ -140,6 +140,9 @@ background: #e9e9e9;
 </div>
 </template>
 
+<script src="jquery.min.js"></script>
+<script src="debug.js"></script>
+<script src="keyboardNavigation.js"></script>
 <script>
 "use strict";
 var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
@@ -203,12 +206,19 @@ this.refreshItems();
 }; // render
 
 multiselectPrototype.attachHandlers = function() {
+var self = this;
 this._field.addEventListener('click', this.fieldClickHandler.bind(this));
-this._control.addEventListener('keydown', this.keyDownHandler.bind(this));
 this._typeahead.addEventListener ("input", this.handleListFilter.bind(this));
 
 this._list.addEventListener('click', this.listClickHandler.bind(this));
 this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
+
+keyboardNavigation ($(this._list), {
+applyAria: false,
+actions: {
+next: this.handleArrowDownKey.bind(this)
+} // actions
+}); // keyboardNavigation
 
 };
 
