@@ -8,7 +8,7 @@ This repository forked from
 
 ## Demo
 
-[Multiselect Demo](demo/index.html)
+[https://RichCaloggero.github.io/multiselect-webcomponent/demo/]
 
 ## Changes From Original
 
