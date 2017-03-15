@@ -1,0 +1,93 @@
+<template id="testTemplate">
+<div class="test" role="region" aria-label="test">
+<button class="report">Click Me</button>
+<div class="status" role="region" aria-label="status" aria-live="polite"></div>
+<div class="content">
+<content select="p"></content>
+</div>
+</div>
+</template>
+
+<script>
+"use strict";
+
+(function() {
+var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
+var template = ownerDocument.querySelector('#testTemplate');
+var testPrototype = Object.create(HTMLElement.prototype);
+
+testPrototype.attachedCallback = function () {
+this.status ("- element attached");
+this.status ("- " + this._control.innerHTML);
+
+}; // attached
+
+testPrototype.createdCallback = function() {
+this.init();
+this.render();
+}; // createdCallback 
+
+testPrototype.init = function() {
+this.initOptions();
+this._root = this.createRootElement();
+this._control = this._root.querySelector('.test');
+this._status = this._root.querySelector('.status');
+this._content = this._root.querySelector('.content');
+
+this._control.addEventListener ("click", function (e) {
+var self = this;
+var name = e.target.className;
+var message = "clicked " + name;
+if (e.target === this._content) {
+message += " which contains " 
++ this._root.querySelectorAll (".content p").length
++ " 'p' elements";
+} // if
+
+self.status (message);
+});
+
+}; // init
+
+testPrototype.initOptions = function() {
+this._options = {
+showStatusMessages: this.getAttribute("showStatusMessages")
+}; // this._options
+}; // initOptions
+
+testPrototype.createRootElement = function() {
+var root = this.createShadowRoot();
+var content = document.importNode(template.content, true);
+
+if (window.ShadowDOMPolyfill) {
+WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
+}
+
+root.appendChild(content);
+return root;
+}; // createdCallback
+
+testPrototype.render = function() {
+}; // render
+
+
+testPrototype.status = function (text) {
+var p = ownerDocument.createElement ("p");
+if (text) {
+p.textContent = text;
+this._status.appendChild (p);
+} else {
+this._status.innerHTML = "";
+} // if
+} // statusMessage
+
+
+document.registerElement('x-t', {
+prototype: testPrototype
+});
+
+
+})();
+
+alert ("test component loaded");
+</script>

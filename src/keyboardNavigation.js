@@ -2,12 +2,15 @@
 
 function keyboardNavigation ($container, options) {
 var name = $container[0].nodeName.toLowerCase();
+var $focusedNode = $();
 var keymap, actions;
 var defaultOptions = {
 type: "list", // list, tree, or menu
+embedded: false, // if embedded in another widget, will not maintain tabindex="0" on container or child element
 selected: true,
 wrap: false,
 applyAria: true,
+
 
 keymap: {
 next: ["ArrowDown", "ArrowRight"],
@@ -36,12 +39,13 @@ options.keymap = processKeymap (options.keymap);
 
 //debug ("actions: ", options.actions.toSource());
 //debug ("applying to ", $containers.length, " containers");
-
+//debug ("$container: ", $container.children().length, $container[0].nodeName, $container.text());
 
 if ($container.is ("ul, div")) {
 if ($container.is ("ul")) $("ul", $container).addBack().css ("list-style-type", "none");
 if (options.applyAria) applyAria ($container, options.type);
-current ();
+current (initialSelection());
+debug ("$container: ", $container[0].nodeName, $container.children().length);
 
 //debug ("applying keyboard event handlers to ", $container.attr("role"));
 $container.on ("keydown",
@@ -64,7 +68,7 @@ e.stopPropagation();
 e.preventDefault();
 
 if (action instanceof Function) {
-//debug ("- call function");
+debug ("- call function");
 performAction (action, e);
 } else if (typeof(action) === "string") {
 //debug ("- fire event ", action);
@@ -80,65 +84,69 @@ return false;
 
 function performAction (action, e) {
 var $newNode;
-//debug ("performAction: ", action);
+debug ("performAction: ", action, $focusedNode.text(), $(e.target).text());
 $newNode = action.call (e.target, e);
-//debug ("new: ", $newNode.text());
+debug ("new: ", $newNode.text());
 
-if (!$newNode || !$newNode.length || $newNode[0] === e.target) return null;
-
-current($newNode);
-$newNode.focus ();
-return $newNode;
+//if (!$newNode || !$newNode.length || $newNode[0] === e.target) return null;
+return current($newNode);
 } // performAction
 
-function defineSelection ($node) {
-$node = $container.children().first();
-} // defineSelection
 
 function current ($node, _replaceSelection) {
-//debug ("current: ", $container[0].nodeName, $container[0].id, $container.children().length, $node? $node[0].nodeName : null);
+//debug ("current: ", $node || $node[0], $focusedNode || $focusedNode[0]);
 if ($container.is ("select")) return $container.find(":selected");
 
+if (! options.embedded) {
 if ($container.children().length === 0) {
-$container.attr ("tabindex", "0");
+$container.attr ("tabindex", "0").focus();
+$container.focus ();
 return $();
 } else {
 $container.removeAttr ("tabindex");
+$("[tabindex=0]", $container).attr("tabindex", "-1");
+} // if
 } // if
 
-if (!$node || !$node.length) {
-$node = $container.find ("[aria-selected=true]");
-if ($node.length > 0) return $node;
-else $node = initialSelection();
+if ($node && !$node.length) {
+debug ("setting focusedNode");
+$focusedNode = $node;
+$container.trigger (jQuery.Event("change", {currentTarget: $container[0]}));
+} else if (! $focusedNode) {
+$node = $focusedNode = initialSelection ();
+$container.trigger (jQuery.Event("change", {currentTarget: $container[0]}));
+} else {
+debug ("$node = $focusNode");
+$node = $focusedNode;
 } // if
 
-if (replaceSelection()) $("[aria-selected=true]", $container).removeAttr ("aria-selected");
-$("[tabindex=0]", $container).addBack().removeAttr ("tabindex");
+if (! options.embedded) $node.attr("tabindex", "0");
 
-$node.attr ("aria-selected", "true")
-.last().attr ("tabindex", "0");
-$container.trigger ("change");
+debug ("- $node: ", $node.text());
+$node.focus ();
 return $node;
-
-function replaceSelection () {
-return !$container.is ("[aria-multiselectable]") || _replaceSelection;
-} // replaceSelection
-
-function initialSelection () {
-return $container.children().first();
-} // initialSelection
 } // current
 
+function initialSelection () {
+debug ("initial selection...");
+return $container.children().length?
+$container.children().first() : $container;
+} // initialSelection
 
 
 /// changes
+
+$container.on ("change", function (e) {
+
+}); // on change
+
 
 
 // create an observer instance
 var observer = new MutationObserver(function(mutations) {
 mutations.forEach(function(mutation) {
-//debug ("mutation: ", mutation);
-applyAria ($container, options.type);
+debug ("mutation: ", mutation);
+if (options.applyAria) applyAria ($container, options.type);
 current ();
 }); // forEach Mutations
 
@@ -170,7 +178,8 @@ type = type.toLowerCase();
 
 if (type === "list") {
 $container.attr ("role", "listbox")
-.children ().attr ({role: "option"});
+.children ().attr ({role: "option", tabindex: "-1"});
+debug ("aria applied to ", type);
 
 } else if (type === "tree") {
 name = $container[0].nodeName.toLowerCase();

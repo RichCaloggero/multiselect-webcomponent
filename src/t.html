@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>WebComponent Test</title>
+<script src="../bower_components/webcomponentsjs/webcomponents.js"></script>
+<link rel="import" href="../src/t.component.html">
+
+</head>
+<body>
+<h1>Test Web Component</h1>
+
+<x-t id="myComponent">
+<p>text inside "x-t" element</p>
+<p>-- end --</p>
+</x-t>
+
+<div id="debug" role="region" aria-label="debug" aria-live="polite">
+</div>
+
+<script src="debug.js"></script>
+
+</body>
+</html>
