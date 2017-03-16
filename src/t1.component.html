@@ -1,0 +1,89 @@
+<template id="testTemplate">
+<div class="test" role="region" aria-label="test">
+<button class="report">Click Me</button>
+<div class="status" role="region" aria-label="status" aria-live="polite"></div>
+<div class="content">
+<button class="dummy">Dummy Button</button>
+<slot select="p"></slot>
+</div>
+</div>
+</template>
+
+
+<script src="jquery.min.js"></script>
+<script src="debug.js"></script>
+<script src="t1.js"></script>
+
+<script>
+"use strict";
+
+(function() {
+//var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
+//var template = ownerDocument.querySelector('#testTemplate');
+var template = document.querySelector ("#testTemplate");
+
+customElements.define ("x-t", class extends HTMLElement {
+constructor () {
+super ();
+
+this.init();
+this.render();
+debug ("- element created");
+} // constructor
+
+init () {
+this.initOptions();
+this._root = this.createRootElement();
+this._control = this._root.querySelector('.test');
+this._status = this._root.querySelector('.status');
+this._content = this._root.querySelector('.content');
+this._button = this._root.querySelector('button');
+alert("buttonCount: " + this.querySelectorAll("button").length);
+this._button.addEventListener ("click", function (e) {
+var buttonCount = this.querySelectorAll(".content button").length;
+var paragraphCount = this.querySelectorAll(".content p").length; 
+debug (paragraphCount, " paragraphs found");
+debug (buttonCount, " buttons found");
+debug (this.innerHTML);
+//test ($(this));
+}.bind(this));
+} // init
+
+initOptions () {
+this._options = {
+showStatusMessages: this.getAttribute("showStatusMessages")
+}; // this._options
+} // initOptions
+
+createRootElement () {
+var root = this.attachShadow({mode: "open"});
+var content = document.importNode(template.content, true);
+
+/*if (window.ShadowDOMPolyfill) {
+WebComponents.ShadowCSS.shimStyling(content, 'x-t');
+}
+*/
+
+root.appendChild(content);
+return root;
+} // createdCallback
+
+render () {
+}; // render
+
+
+status (text) {
+var p = document.createElement ("p");
+p.textContent = text;
+this._status.innerHTML = "";
+this._status.appendChild (p);
+} // statusMessage
+
+}); // create element
+
+window.addEventListener ("HTMLImportsLoaded", function () {alert ("HTMLImportsLoaded ok");});
+ 
+})();
+
+alert ("test component loaded");
+</script>

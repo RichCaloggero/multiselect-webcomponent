@@ -1,6 +1,7 @@
 "use strict";
 
 function keyboardNavigation ($container, options) {
+debugger;
 var name = $container[0].nodeName.toLowerCase();
 var $focusedNode = $();
 var keymap, actions;

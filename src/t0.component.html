@@ -3,10 +3,15 @@
 <button class="report">Click Me</button>
 <div class="status" role="region" aria-label="status" aria-live="polite"></div>
 <div class="content">
+<button class="dummy">Dummy Button</button>
 <content select="p"></content>
 </div>
 </div>
 </template>
+
+<script src="jquery.min.js"></script>
+<script src="debug.js"></script>
+<script src="t.js"></script>
 
 <script>
 "use strict";
@@ -14,17 +19,19 @@
 (function() {
 var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
 var template = ownerDocument.querySelector('#testTemplate');
+//var template = document.querySelector ("#testTemplate");
+
 var testPrototype = Object.create(HTMLElement.prototype);
 
 testPrototype.attachedCallback = function () {
-this.status ("- element attached");
-this.status ("- " + this._control.innerHTML);
-
+debug("- element attached");
+debug("- " + this._control.innerHTML);
 }; // attached
 
 testPrototype.createdCallback = function() {
 this.init();
 this.render();
+debug ("- element created");
 }; // createdCallback 
 
 testPrototype.init = function() {
@@ -33,20 +40,16 @@ this._root = this.createRootElement();
 this._control = this._root.querySelector('.test');
 this._status = this._root.querySelector('.status');
 this._content = this._root.querySelector('.content');
+this._button = this._root.querySelector('button');
 
-this._control.addEventListener ("click", function (e) {
-var self = this;
-var name = e.target.className;
-var message = "clicked " + name;
-if (e.target === this._content) {
-message += " which contains " 
-+ this._root.querySelectorAll (".content p").length
-+ " 'p' elements";
-} // if
-
-self.status (message);
-});
-
+this._button.addEventListener ("click", function (e) {
+var message = "content: " 
++ this.querySelectorAll(".content p").length 
++ " paragraphs found";
+this.status (message);
+this.status ("content: " + this.innerHTML);
+//test ($(this));
+}.bind(this));
 }; // init
 
 testPrototype.initOptions = function() {
@@ -60,7 +63,7 @@ var root = this.createShadowRoot();
 var content = document.importNode(template.content, true);
 
 if (window.ShadowDOMPolyfill) {
-WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
+WebComponents.ShadowCSS.shimStyling(content, 'x-t');
 }
 
 root.appendChild(content);
@@ -86,7 +89,8 @@ document.registerElement('x-t', {
 prototype: testPrototype
 });
 
-
+window.addEventListener ("HTMLImportsLoaded", function () {alert ("HTMLImportsLoaded ok");});
+ 
 })();
 
 alert ("test component loaded");

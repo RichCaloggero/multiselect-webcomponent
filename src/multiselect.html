@@ -149,7 +149,7 @@ background: #e9e9e9;
 var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
 var template = ownerDocument.querySelector('#multiselectTemplate');
 
-(function() {
+(function($, window) {
 var searchTimer = null;
 var searchText = "";
 var filterText = "";
@@ -206,13 +206,16 @@ return root;
 };
 
 multiselectPrototype.render = function() {
+this.attachHandlers();
+this.refreshField();
+this.refreshItems();
 this.currentItem = keyboardNavigation.call (this, $(this._list), {
 embedded: true
 }); // keyboardNavigation
-this.attachHandlers();
-this.refreshField();
-//this.refreshItems();
-debug ("render: ", this._list.childNodes.length, this._list.innerHTML);
+
+window.addEventListener ("HTMLImportsLoaded", function () {
+alert("HTMLImportLoaded: ok");
+});
 debug ("render complete.");
 }; // render
 
@@ -283,16 +286,14 @@ searchText = "";
 multiselectPrototype.searchList = function (text) {
 var index = findIndex(this.itemElements(), function (element) {
 return element.textContent.toLowerCase().startsWith (text.toLowerCase());
-}, this._focusedItemIndex);
+}, this.focusedItemIndex());
 
 if (index >= 0) {
-//this._focusedItemIndex = index;
-//this.refreshFocusedItem ();
 this.currentItem (this.itemElements()[index]);
 return index;
-} // if
-
+} else {
 return -1;
+} // if
 
 function findIndex (list, test, start) {
 start = start || 0;
@@ -333,30 +334,6 @@ if (!element.textContent.toLowerCase().includes (text)) element.setAttribute ("h
 
 this.displayItemCount ();
 } // filterList 
-
-multiselectPrototype.selectedElements = function () {
-return this.itemElements().filter ((x) => x.hasAttribute("selected"));
-}; // selectedElements
-
-multiselectPrototype.allElements = function () {
-return Array.from(this.querySelectorAll("li"));
-} // allElements
-
-multiselectPrototype.selectAll = function () {
-this.allElements().forEach ((x) => this.selectItem(x));
-} // selectAll
-
-multiselectPrototype.unselectAll = function () {
-this.allElements().forEach ((x) => this.unselectItem(x));
-} // unselectAll
-
-multiselectPrototype.restoreList = function () {
-this.allElements().forEach (function (element) {
-element.removeAttribute ("hidden");
-}); // forEach
-
-this.refreshItems ();
-} // restoreList
 
 
 multiselectPrototype.handleEnterKey = function(e) {
@@ -436,15 +413,39 @@ item = item.parentNode;
 this.selectItem(item);
 };
 
+/// elements and items
+
+multiselectPrototype.selectedElements = function () {
+return Array.from(this.querySelectorAll(".selected"));
+}; // selectedElements
+
+multiselectPrototype.allElements = function () {
+return Array.from(this.querySelectorAll("[role=option]"));
+} // allElements
+
+multiselectPrototype.selectAll = function () {
+this.allElements().forEach ((x) => this.selectItem(x));
+} // selectAll
+
+multiselectPrototype.unselectAll = function () {
+this.allElements().forEach ((x) => this.unselectItem(x));
+} // unselectAll
+
+multiselectPrototype.restoreList = function () {
+this.allElements().forEach (function (element) {
+element.removeAttribute ("hidden");
+}); // forEach
+
+this.refreshItems ();
+} // restoreList
+
+
 multiselectPrototype.selectItem = function(item) {
 item.setAttribute('selected', 'selected');
 item.setAttribute('aria-selected', "true");
 
 this.fireChangeEvent();
 this.refreshField();
-
-//this.refreshFocusedItem ();
-//this.close();
 }; // selectItem
 
 multiselectPrototype.unselectItem = function(item) {
@@ -554,17 +555,6 @@ this._popup.style.display = show ? 'block' : 'none';
 this._control.setAttribute("aria-expanded", show? "true" : "false");
 }; // togglePopup
 
-multiselectPrototype.search = function (text) {
-} // search
-
-multiselectPrototype.collectText = function (text) {
-this.searchText += text;
-} // collectText
-
-
-multiselectPrototype.value = function (_value) {
-}; // value
-
 
 multiselectPrototype.selectedElements = function () {
 return this.querySelectorAll('li[selected]');
@@ -584,6 +574,7 @@ result.push(selectedItem.hasAttribute('value')
 
 return result;
 }; // selectedItems
+
 
 multiselectPrototype.displayItemCount = function (text) {
 var message = (text)?
@@ -616,7 +607,7 @@ var result = /\w/.test (x);
 return result;
 } // isAlphanumeric
 
-})();
+})($, window);
 
 //alert ("multiselect component loaded");
 </script>
