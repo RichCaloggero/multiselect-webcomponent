@@ -4,7 +4,9 @@
 <div class="status" role="region" aria-label="status" aria-live="polite"></div>
 <div class="content">
 <button class="dummy">Dummy Button</button>
-<slot select="p"></slot>
+<ul>
+<slot select="li"></slot>
+</ul>
 </div>
 </div>
 </template>
@@ -26,25 +28,44 @@ customElements.define ("x-t", class extends HTMLElement {
 constructor () {
 super ();
 
-this.init();
-this.render();
 debug ("- element created");
 } // constructor
+
+connectedCallback () {
+this.init();
+this.render();
+} // connectedCallback
 
 init () {
 this.initOptions();
 this._root = this.createRootElement();
 this._control = this._root.querySelector('.test');
 this._status = this._root.querySelector('.status');
-this._content = this._root.querySelector('.content');
-this._button = this._root.querySelector('button');
-alert("buttonCount: " + this.querySelectorAll("button").length);
-this._button.addEventListener ("click", function (e) {
-var buttonCount = this.querySelectorAll(".content button").length;
-var paragraphCount = this.querySelectorAll(".content p").length; 
-debug (paragraphCount, " paragraphs found");
-debug (buttonCount, " buttons found");
-debug (this.innerHTML);
+this._content = Array.from(this.querySelectorAll("li"));
+
+this._report = this._root.querySelector('.report');
+this._dummy = this._root.querySelector('.dummy');
+
+this._content.forEach (e => e.setAttribute("foo", "boo"));
+
+this._dummy.addEventListener ("click", function () {alert ("you clicked a dummy button");});
+
+this._report.addEventListener ("click", function (e) {
+var buttonCount = this._root.querySelectorAll("button").length;
+var paragraphCount = this.querySelectorAll("li").length; 
+
+debug (paragraphCount, " elements found beneath host");
+
+try {
+debug ("nodes found via slot's assigned nodes:");
+Array.from(this._root.querySelector("slot").assignedNodes())
+.filter(e => e.nodeName.toLowerCase() === "li")
+.forEach (e => debug (e.outerHTML));
+} catch (e) {
+alert (e);
+} // try
+
+//debug (this._root.innerHTML);
 //test ($(this));
 }.bind(this));
 } // init
@@ -57,16 +78,16 @@ showStatusMessages: this.getAttribute("showStatusMessages")
 
 createRootElement () {
 var root = this.attachShadow({mode: "open"});
-var content = document.importNode(template.content, true);
+var content = document.getElementById("testTemplate").content;
 
 /*if (window.ShadowDOMPolyfill) {
 WebComponents.ShadowCSS.shimStyling(content, 'x-t');
 }
 */
 
-root.appendChild(content);
+root.appendChild(content.cloneNode(true));
 return root;
-} // createdCallback
+} // createRootElement
 
 render () {
 }; // render
