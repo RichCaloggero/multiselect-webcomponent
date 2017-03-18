@@ -146,25 +146,27 @@ background: #e9e9e9;
 
 <script>
 "use strict";
-var template = document.querySelector('#multiselectTemplate');
+var ownerDocument = (document._currentScript || document.currentScript).ownerDocument;
+var template = ownerDocument.querySelector('#multiselectTemplate');
 
 (function($, window) {
 var searchTimer = null;
 var searchText = "";
 var filterText = "";
 
-customElements.define ("x-multiselect", class extends HTMLElement {
-constructor () {
-super ();
-debug ("x-multiselect element created");
-} // constructor
+var multiselectPrototype = Object.create(HTMLElement.prototype);
 
-connectedCallback () {
+multiselectPrototype.attachedCallback = function () {
+debug ("element attached");
+};
+
+
+multiselectPrototype.createdCallback = function() {
 this.init();
 this.render();
-} // connectedCallback
+}; // createdCallback
 
-init () {
+multiselectPrototype.init = function() {
 this.initOptions();
 
 this._filterText = "";
@@ -180,32 +182,30 @@ this._status = this._root.querySelector('.status');
 this._labelText.textContent = this._options.label;
 this._status.classList.toggle ("screen-reader-only", !this._options.showStatusMessages);
 
-} // init
+}; // init
 
-initOptions () {
+multiselectPrototype.initOptions = function() {
 this._options = {
 placeholder: this.getAttribute("placeholder") || 'Select',
 label: this.getAttribute("label") || '',
 showStatusMessages: this.getAttribute("showStatusMessages")
-}; // options
-} // initOptions
+};
+};
 
-createRootElement () {
-var root = this.attachShadow({mode: "open"});
+multiselectPrototype.createRootElement = function() {
+var root = this.createShadowRoot();
 var content = document.importNode(template.content, true);
 
-/*if (window.ShadowDOMPolyfill) {
+if (window.ShadowDOMPolyfill) {
 WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
 }
-*/
 
 root.appendChild(content);
-
 debug ("- root created");
 return root;
-} // createRootElement
+};
 
-render () {
+multiselectPrototype.render = function() {
 this.attachHandlers();
 this.refreshField();
 this.refreshItems();
@@ -214,12 +214,12 @@ embedded: true
 }); // keyboardNavigation
 
 window.addEventListener ("HTMLImportsLoaded", function () {
-debug ("HTMLImportLoaded");
+alert("HTMLImportLoaded: ok");
 });
 debug ("render complete.");
-} // render
+}; // render
 
-attachHandlers () {
+multiselectPrototype.attachHandlers = function() {
 var self = this;
 this._field.addEventListener('click', this.fieldClickHandler.bind(this));
 this._typeahead.addEventListener ("input", this.handleListFilter.bind(this));
@@ -228,23 +228,22 @@ this._typeahead.addEventListener ("keydown", this.handleOpenOnDownArrow.bind(thi
 this._list.addEventListener('click', this.listClickHandler.bind(this));
 this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
 
-} // attachHandlers
+};
 
-handleOpenOnDownArrow (e) {
+multiselectPrototype.handleOpenOnDownArrow = function (e) {
 if (e.key === "ArrowDown") {
 this.open ();
-refreshFocusedItem ();
 return false;
 } // if
 
 return true;
-} // handleOpenOnDownArrow
+}; // handleOpenOnDownArrow
 
-fieldClickHandler () {
+multiselectPrototype.fieldClickHandler = function() {
 //this._isOpened ? this.close() : this.open();
-} // fieldClickHandler 
+};
 
-keyDownHandler (event) {
+multiselectPrototype.keyDownHandler = function(event) {
 stopTimer ();
 
 switch(event.which) {
@@ -268,11 +267,11 @@ default:
 } // switch
 event.preventDefault();
 
-} // keydown handler
+}; // keydown handler
 
 // individual key handlers
 
-handleListSearch (e) {
+multiselectPrototype.handleListSearch = function (e) {
 var self = this;
 var character = e.char || String.fromCharCode (e.which || e.keyCode);
 if (! isAlphanumeric(character)) return true;
@@ -282,9 +281,9 @@ searchTimer = setTimeout (function () {
 self.searchList (searchText);
 searchText = "";
 }, this.searchTimeout || 200); // milliseconds
-} // handleListSearch
+}; // handleListSearch
 
-searchList (text) {
+multiselectPrototype.searchList = function (text) {
 var index = findIndex(this.itemElements(), function (element) {
 return element.textContent.toLowerCase().startsWith (text.toLowerCase());
 }, this.focusedItemIndex());
@@ -316,13 +315,13 @@ if (test(list[i])) return i;
 
 return -1;
 } // findIndex
-} // searchList
+}; // searchList
 
-handleListFilter () {
+multiselectPrototype.handleListFilter = function () {
 this.filterList (this._typeahead.value);
 } // handleListFilter
 
-filterList (text) {
+multiselectPrototype.filterList = function (text) {
 this.restoreList ();
 this.unselectAll ();
 
@@ -337,7 +336,7 @@ this.displayItemCount ();
 } // filterList 
 
 
-handleEnterKey (e) {
+multiselectPrototype.handleEnterKey = function(e) {
 if(this._isOpened) {
 //var focusedItem = this.itemElements()[this._focusedItemIndex];
 var focusedItem = this.currentItem();
@@ -348,9 +347,9 @@ else this.selectItem (focusedItem);
 this.displayItemCount ("selected items");
 e.stopPropagation ();
 } // if
-} // handleEnterKey
+}; // handleEnterKey
 
-handleArrowDownKey () {
+multiselectPrototype.handleArrowDownKey = function() {
 if (! this._isOpened) {
 this.open ();
 this.refreshFocusedItem();
@@ -365,7 +364,7 @@ this.refreshFocusedItem();
 //alert ("focus item " + this._focusedItemIndex);
 };
 
-handleArrowUpKey () {
+multiselectPrototype.handleArrowUpKey = function() {
 this._focusedItemIndex = (this._focusedItemIndex > 0)
     ? this._focusedItemIndex - 1
     : this.itemElements().length - 1;
@@ -373,22 +372,22 @@ this._focusedItemIndex = (this._focusedItemIndex > 0)
 this.refreshFocusedItem();
 };
 
-handleAltArrowDownKey () {
+multiselectPrototype.handleAltArrowDownKey = function() {
 this.open();
 };
 
-handleAltArrowUpKey () {
+multiselectPrototype.handleAltArrowUpKey = function() {
 this.close();
 };
 
-refreshFocusedItem () {
+multiselectPrototype.refreshFocusedItem = function() {
 var elements = this.itemElements();
 //alert ("index = " + this._focusedItemIndex + ", item count = " + elements.length );
 //elements[this._focusedItemIndex].focus();
 this.currentItem ($(elements[this._focusedItemIndex]));
 };
 
-handleBackspaceKey (e) {
+multiselectPrototype.handleBackspaceKey = function(e) {
 var selectedItemElements = this.selectedElements ();
 
 if (e.target === this._typeahead) return true;
@@ -397,15 +396,15 @@ if(selectedItemElements.length) {
 this.unselectItem(selectedItemElements[selectedItemElements.length - 1]);
 } // if
 
-} // handleBackspaceKey
+}; // handleBackspaceKey
 
-handleEscapeKey () {
+multiselectPrototype.handleEscapeKey = function() {
 this.close();
 this._typeahead.value = "";
 this.restoreList ();
-} // handleEscapeKey
+}; // handleEscapeKey
 
-listClickHandler (event) {
+multiselectPrototype.listClickHandler = function(event) {
 var item = event.target;
 while(item && item.tagName !== 'LI') {
 item = item.parentNode;
@@ -416,23 +415,23 @@ this.selectItem(item);
 
 /// elements and items
 
-selectedElements () {
+multiselectPrototype.selectedElements = function () {
 return Array.from(this.querySelectorAll(".selected"));
-} // selectedElements
+}; // selectedElements
 
-allElements () {
+multiselectPrototype.allElements = function () {
 return Array.from(this.querySelectorAll("[role=option]"));
 } // allElements
 
-selectAll () {
+multiselectPrototype.selectAll = function () {
 this.allElements().forEach ((x) => this.selectItem(x));
 } // selectAll
 
-unselectAll () {
+multiselectPrototype.unselectAll = function () {
 this.allElements().forEach ((x) => this.unselectItem(x));
 } // unselectAll
 
-restoreList () {
+multiselectPrototype.restoreList = function () {
 this.allElements().forEach (function (element) {
 element.removeAttribute ("hidden");
 }); // forEach
@@ -441,27 +440,27 @@ this.refreshItems ();
 } // restoreList
 
 
-selectItem (item) {
+multiselectPrototype.selectItem = function(item) {
 item.setAttribute('selected', 'selected');
 item.setAttribute('aria-selected', "true");
 
 this.fireChangeEvent();
 this.refreshField();
-} // selectItem
+}; // selectItem
 
-unselectItem (item) {
+multiselectPrototype.unselectItem = function(item) {
 item.removeAttribute('selected');
 item.setAttribute('aria-selected', false);
 this.fireChangeEvent();
 this.refreshField();
-} // unselectItem
+}; // unselectItem
 
-fireChangeEvent () {
+multiselectPrototype.fireChangeEvent = function() {
 var event = new CustomEvent("change");
 this.dispatchEvent(event);
 };
 
-refreshField () {
+multiselectPrototype.refreshField = function() {
 this._field.innerHTML = '';
 var selectedItems = this.selectedElements();
 
@@ -473,9 +472,9 @@ return;
 for(var i = 0; i < selectedItems.length; i++) {
 this._field.appendChild(this.createTag(selectedItems[i]));
 }
-} // refreshField
+}; // refreshField
 
-refreshItems () {
+multiselectPrototype.refreshItems = function() {
 var itemElements = this.itemElements();
 
 for(var i = 0; i < itemElements.length; i++) {
@@ -486,17 +485,17 @@ itemElement.setAttribute("tabindex", -1);
 }
 
 this._focusedItemIndex = 0;
-} // refreshItems
+}; // refreshItems
 
 
-itemElements (selector) {
+multiselectPrototype.itemElements = function(selector) {
 var items;
 selector = selector || "li:not([hidden])";
 items = this.querySelectorAll(selector);
 return Array.from(items);
 };
 
-createPlaceholder () {
+multiselectPrototype.createPlaceholder = function() {
 var placeholder = document.createElement('div');
 placeholder.className = 'multiselect-field-placeholder';
 placeholder.setAttribute ("tabindex", "0");
@@ -507,7 +506,7 @@ placeholder.textContent = this._options.placeholder;
 return placeholder;
 };
 
-createTag (item) {
+multiselectPrototype.createTag = function(item) {
 var tag = document.createElement('button');
 tag.className = 'multiselect-tag';
 
@@ -525,43 +524,43 @@ tag.appendChild(content);
 return tag;
 };
 
-removeTag (tag, item, event) {
+multiselectPrototype.removeTag = function(tag, item, event) {
 var _field = this._field;
 this.unselectItem(item);
 event.stopPropagation();
 //setTimeout (function () {
 _field.firstChild.focus();
 //}, 50);
-} // removeTag
+}; // removeTag
 
 
-attributeChangedCallback (optionName, oldValue, newValue) {
+multiselectPrototype.attributeChangedCallback = function(optionName, oldValue, newValue) {
 this._options[optionName] = newValue;
 this.refreshField();
 };
 
-open () {
+multiselectPrototype.open = function() {
 this.togglePopup(true);
 this.refreshFocusedItem();
-} // open
+}; // open
 
-close () {
+multiselectPrototype.close = function() {
 this.togglePopup(false);
 this._typeahead.focus();
-} // close
+}; // close
 
-togglePopup (show) {
+multiselectPrototype.togglePopup = function(show) {
 this._isOpened = show;
 this._popup.style.display = show ? 'block' : 'none';
 this._control.setAttribute("aria-expanded", show? "true" : "false");
-} // togglePopup
+}; // togglePopup
 
 
-selectedElements () {
+multiselectPrototype.selectedElements = function () {
 return this.querySelectorAll('li[selected]');
 } // selectedElements
 
-selectedItems () {
+multiselectPrototype.selectedItems = function() {
 var result = [];
 var selectedItems = this.selectedElements();
 
@@ -574,23 +573,26 @@ result.push(selectedItem.hasAttribute('value')
 } // for
 
 return result;
-} // selectedItems
+}; // selectedItems
 
 
-displayItemCount (text) {
+multiselectPrototype.displayItemCount = function (text) {
 var message = (text)?
 this.selectedElements().length 
 : this.itemElements().length;
 message += " " + (text || "items");
 this.statusMessage (message);
-} // displayItemCount
+}; // displayItemCount
 
-statusMessage (text) {
+multiselectPrototype.statusMessage = function (text) {
 this._status.textContent = text;
-} // statusMessage
+}; // statusMessage
 
-}); // custom element
 
+
+document.registerElement("x-multiselect", {
+prototype: multiselectPrototype
+});
 debug ("element x-multiselect registered");
 
 /// helpers

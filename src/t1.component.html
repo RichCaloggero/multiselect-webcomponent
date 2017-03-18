@@ -41,32 +41,45 @@ this.initOptions();
 this._root = this.createRootElement();
 this._control = this._root.querySelector('.test');
 this._status = this._root.querySelector('.status');
-this._content = Array.from(this.querySelectorAll("li"));
+this._list = this._root.querySelector ("ul");
+Array.from(this.querySelectorAll("li"))
+.forEach (e => e.setAttribute("tabindex", "0"));
+
+this._list.addEventListener ("click", function (e) {
+var x = e.target;
+debug ("click on ", x.outerHTML);
+x = nextSibling(x);
+if (! x) debug ("- next: null");
+else debug ("next: ", x.outerHTML);
+});
+
+function nextSibling (node) {
+do {
+node = node.nextSibling;
+} while (node && node.nodeType !== 1);
+return node;
+} // nextSibling
+
+debug ("list length (from host): ", this._list.childNodes.length);
+debug (this._list.innerHTML);
+debug ("----------");
+
+debug ("list length again: ",  
+this._list.querySelector("slot").assignedNodes().length);
+
+Array.from (this._list.querySelector("slot").assignedNodes(true))
+.filter(e => e.nodeType === 1)
+.forEach (e => debug (e.outerHTML));
+
 
 this._report = this._root.querySelector('.report');
 this._dummy = this._root.querySelector('.dummy');
 
-this._content.forEach (e => e.setAttribute("foo", "boo"));
 
 this._dummy.addEventListener ("click", function () {alert ("you clicked a dummy button");});
 
 this._report.addEventListener ("click", function (e) {
-var buttonCount = this._root.querySelectorAll("button").length;
-var paragraphCount = this.querySelectorAll("li").length; 
 
-debug (paragraphCount, " elements found beneath host");
-
-try {
-debug ("nodes found via slot's assigned nodes:");
-Array.from(this._root.querySelector("slot").assignedNodes())
-.filter(e => e.nodeName.toLowerCase() === "li")
-.forEach (e => debug (e.outerHTML));
-} catch (e) {
-alert (e);
-} // try
-
-//debug (this._root.innerHTML);
-//test ($(this));
 }.bind(this));
 } // init
 
@@ -79,6 +92,7 @@ showStatusMessages: this.getAttribute("showStatusMessages")
 createRootElement () {
 var root = this.attachShadow({mode: "open"});
 var content = document.getElementById("testTemplate").content;
+content = document.importNode (content, true);
 
 /*if (window.ShadowDOMPolyfill) {
 WebComponents.ShadowCSS.shimStyling(content, 'x-t');

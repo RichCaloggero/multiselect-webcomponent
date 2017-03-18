@@ -1,10 +1,9 @@
 "use strict";
 
-function keyboardNavigation ($container, options) {
-debugger;
-var name = $container[0].nodeName.toLowerCase();
-var $focusedNode = $();
+function keyboardNavigation (container, options) {
+var focusedNode = null;
 var keymap, actions;
+
 var defaultOptions = {
 type: "list", // list, tree, or menu
 embedded: false, // if embedded in another widget, will not maintain tabindex="0" on container or child element
@@ -32,26 +31,18 @@ out: function () {}
 } // actions
 }; // defaultOptions
 
+if (nodeName(container) === "select") return;
+
 options = Object.assign ({}, defaultOptions, options);
 options.keymap = Object.assign ({}, defaultOptions.keymap, options.keymap);
 options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
 options.keymap = processKeymap (options.keymap);
 
 
-//debug ("actions: ", options.actions.toSource());
-//debug ("applying to ", $containers.length, " containers");
-//debug ("$container: ", $container.children().length, $container[0].nodeName, $container.text());
+if (options.applyAria) applyAria (container, options.type);
+current (initialFocus());
 
-if ($container.is ("ul, div")) {
-if ($container.is ("ul")) $("ul", $container).addBack().css ("list-style-type", "none");
-if (options.applyAria) applyAria ($container, options.type);
-current (initialSelection());
-debug ("$container: ", $container[0].nodeName, $container.children().length);
-
-//debug ("applying keyboard event handlers to ", $container.attr("role"));
-$container.on ("keydown",
-// "[role=option], [role=treeitem], [role=menuitem]",
-function (e) {
+container.addEventListener ("keydown", function (e) {
 var key = e.key || e.which || e.keyCode;
 var actionName = options.keymap[key];
 var action = options.actions[actionName]; // action
@@ -64,97 +55,68 @@ throw new Error ("invalid key: " + key);
 
 if (! action) return true;
 
-e.stopImmediatePropagation();
-e.stopPropagation();
-e.preventDefault();
-
 if (action instanceof Function) {
 debug ("- call function");
 performAction (action, e);
 } else if (typeof(action) === "string") {
 //debug ("- fire event ", action);
-$(e.target).trigger (action);
+e.target.dispatchEvent (new CustomEvent(action));
 } else {
 alert ("invalid type: " + action);
 return true;
 } // if
 
 return false;
-});
+}); // keydown
 } // if
 
 function performAction (action, e) {
-var $newNode;
-debug ("performAction: ", action, $focusedNode.text(), $(e.target).text());
-$newNode = action.call (e.target, e);
-debug ("new: ", $newNode.text());
+newNode = action.call (e.target, e);
 
-//if (!$newNode || !$newNode.length || $newNode[0] === e.target) return null;
-return current($newNode);
+if (newNode !== e.target) current (newNode);
 } // performAction
 
 
-function current ($node, _replaceSelection) {
-//debug ("current: ", $node || $node[0], $focusedNode || $focusedNode[0]);
-if ($container.is ("select")) return $container.find(":selected");
-
-if (! options.embedded) {
-if ($container.children().length === 0) {
-$container.attr ("tabindex", "0").focus();
-$container.focus ();
-return $();
-} else {
-$container.removeAttr ("tabindex");
-$("[tabindex=0]", $container).attr("tabindex", "-1");
-} // if
-} // if
-
-if ($node && !$node.length) {
+function current (node) {
+if (node) {
 debug ("setting focusedNode");
-$focusedNode = $node;
-$container.trigger (jQuery.Event("change", {currentTarget: $container[0]}));
-} else if (! $focusedNode) {
-$node = $focusedNode = initialSelection ();
-$container.trigger (jQuery.Event("change", {currentTarget: $container[0]}));
+setFocus (node);
+return node;
 } else {
-debug ("$node = $focusNode");
-$node = $focusedNode;
+return getFocus ();
 } // if
-
-if (! options.embedded) $node.attr("tabindex", "0");
-
-debug ("- $node: ", $node.text());
-$node.focus ();
-return $node;
 } // current
 
-function initialSelection () {
-debug ("initial selection...");
-return $container.children().length?
-$container.children().first() : $container;
-} // initialSelection
+function initialFocus () {
+return container.querySelector("[role=option]");
+} // initialFocus
 
+function getFocus () {
+return focusedNode;
+} // getFocus
 
-/// changes
+function setFocus (node) {
+focusedNode = node;
+} // setFocus
 
-$container.on ("change", function (e) {
-
-}); // on change
-
+function nodeName (node) {
+if (! node) return "";
+return node.nodeName.toLowerCase();
+} // nodeName
 
 
 // create an observer instance
 var observer = new MutationObserver(function(mutations) {
 mutations.forEach(function(mutation) {
-debug ("mutation: ", mutation);
-if (options.applyAria) applyAria ($container, options.type);
+//debug ("mutation: ", mutation);
+if (options.applyAria) applyAria (container, options.type);
 current ();
 }); // forEach Mutations
 
 }); // new Observer
 
 // pass in the target node, as well as the observer options
-observer.observe($container[0], {childList: true});
+observer.observe(container, {childList: true});
 
 // later, you can stop observing
 //observer.disconnect();
@@ -178,20 +140,27 @@ var name, $groups, $branches, $hasChildren;
 type = type.toLowerCase();
 
 if (type === "list") {
-$container.attr ("role", "listbox")
-.children ().attr ({role: "option", tabindex: "-1"});
+container.setAttribute("role", "listbox");
+(container.querySelectorAll ("li, div, span"))
+.forEach (e => {
+e.setAttribute ("role", "option");
+e.setAttribute ("tabindex", "-1");
+});
 debug ("aria applied to ", type);
 
 } else if (type === "tree") {
-name = $container[0].nodeName.toLowerCase();
-$groups = $container.find (name).attr ("role", "group");
-name = $container.children().first()[0].nodeName.toLowerCase();
-$branches = $container.find (name).attr ("role", "treeitem");
-$container.attr ("role", "tree");
+name = nodeName (container);
+Array.from(container.querySelectorAll(name))
+.forEach (e => setAttribute ("role", "group"));
+
+name = nodeName(container.firstChild);
+branches = Array.from(container.querySelectorAll(name))
+.forEach (e => setAttribute("role", "treeitem"));
+container.setAttribute("role", "tree");
 
 // add aria-expanded to nodes only if they are not leaf nodes
-$hasChildren = $branches.has("[role=group]");
-$hasChildren.attr ("aria-expanded", "false");
+Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
+.forEach (e => e.setAttribute("aria-expanded", "false"));
 
 } // if
 
@@ -199,19 +168,19 @@ $hasChildren.attr ("aria-expanded", "false");
 
 /// default actions
 function nextItem () {
-return $(this).next();
+return nextSibling (this);
 } // nextItem
 
 function prevItem () {
-return $(this).prev();
+return previousSibling (this);
 } // prevItem
 
 function firstItem () {
-return $(this).parent().children().first();
+return firstChild(this.parentNode);
 } // firstItem 
 
 function lastItem () {
-return $(this).parent().children().last();
+return lastChild(this.parentNode);
 } // lastItem 
 
 
@@ -233,4 +202,3 @@ return $down;
 return current;
 } // keyboardNavigation
 
-alert ("keyboardNavigation.js loaded");
