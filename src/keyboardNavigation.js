@@ -7,7 +7,6 @@ var keymap, actions;
 var defaultOptions = {
 type: "list", // list, tree, or menu
 embedded: false, // if embedded in another widget, will not maintain tabindex="0" on container or child element
-selected: true,
 wrap: false,
 applyAria: true,
 
@@ -44,7 +43,12 @@ options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
 options.keymap = processKeymap (options.keymap);
 //debug ("keymap after: ", options.keymap.toSource());
 
-if (container.matches("ul")) container.style.listStyleType = "none";
+if (container.matches("ul")) {
+container.style.listStyleType = "none";
+Array.from(container.querySelectorAll (nodeName(container)))
+.forEach (e => e.style.listStyleType = "none");
+} // if
+
 
 if (options.applyAria) applyAria (container, options.type);
 current (initialFocus());
@@ -104,7 +108,13 @@ return focusedNode;
 } // getFocus
 
 function setFocus (node) {
+var oldNode;
 focusedNode = node;
+if (! options.embedded) {
+oldNode = container.querySelector ("[tabindex='0']");
+if (oldNode) oldNode.setAttribute ("tabindex", "-1");
+focusedNode.setAttribute ("tabindex", "0");
+} // if
 focusedNode.focus();
 //debug ("setFocus: ", node.outerHTML);
 } // setFocus
