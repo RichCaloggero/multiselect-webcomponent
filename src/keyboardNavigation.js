@@ -51,7 +51,7 @@ Array.from(container.querySelectorAll (nodeName(container)))
 
 
 if (options.applyAria) applyAria (container, options.type);
-current (initialFocus());
+setFocusedNode(initialFocus());
 
 container.addEventListener ("keydown", function (e) {
 var key = e.key || e.which || e.keyCode;
@@ -91,7 +91,8 @@ if (newNode !== e.target) current (newNode);
 function current (node) {
 if (node) {
 //debug ("setting focusedNode");
-setFocus (node);
+setFocusedNode (node);
+node.focus ();
 return node;
 } else {
 return getFocus ();
@@ -107,17 +108,16 @@ function getFocus () {
 return focusedNode;
 } // getFocus
 
-function setFocus (node) {
+function setFocusedNode (node) {
 var oldNode;
+if (! node) return;
 focusedNode = node;
 if (! options.embedded) {
 oldNode = container.querySelector ("[tabindex='0']");
 if (oldNode) oldNode.setAttribute ("tabindex", "-1");
 focusedNode.setAttribute ("tabindex", "0");
 } // if
-focusedNode.focus();
-//debug ("setFocus: ", node.outerHTML);
-} // setFocus
+} // setFocusedNode
 
 
 

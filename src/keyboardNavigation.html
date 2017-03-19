@@ -44,17 +44,16 @@
 <script>
 var list = document.querySelector(".listbox > ul");
 var tree = document.querySelector(".tree > ul");
-//var navigateListbox = keyboardNavigation (list);
+var navigateListbox = keyboardNavigation (list);
 var navigateTree = keyboardNavigation (tree, {
 type: "tree",
 keymap: {
-up: ["ArrowLeft"], down: ["ArrowRight"],
-//prev: ["ArrowUp"], next: ["arrowDown"]
+up: ["ArrowLeft"], down: ["ArrowRight"]
 } // keymap
 });
 //debug (list.outerHTML);
-//navigateListbox().focus();
-navigateTree().focus();
+navigateListbox().focus();
+//navigateTree().focus();
 
 alert ("loaded");
 </script>
