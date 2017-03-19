@@ -209,7 +209,7 @@ render () {
 this.attachHandlers();
 this.refreshField();
 this.refreshItems();
-this.currentItem = keyboardNavigation.call (this, $(this._list), {
+this.currentItem = keyboardNavigation.call (this, this._list, {
 embedded: true
 }); // keyboardNavigation
 

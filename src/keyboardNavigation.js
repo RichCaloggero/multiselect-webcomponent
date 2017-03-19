@@ -68,10 +68,10 @@ return true;
 
 return false;
 }); // keydown
-} // if
 
 function performAction (action, e) {
-newNode = action.call (e.target, e);
+var newNode = action.call (container, getFocus());
+debug ("performAction: ", e.target.outerHTML, newNode.outerHTML);
 
 if (newNode !== e.target) current (newNode);
 } // performAction
@@ -97,10 +97,14 @@ return focusedNode;
 
 function setFocus (node) {
 focusedNode = node;
+debug ("setFocus: ", node.outerHTML);
 } // setFocus
 
 function nodeName (node) {
 if (! node) return "";
+if (! node.nodeName) {
+throw Error ("bad node: " + JSON.stringify(node));
+} // if
 return node.nodeName.toLowerCase();
 } // nodeName
 
@@ -167,38 +171,65 @@ Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
 } // applyAria
 
 /// default actions
-function nextItem () {
-return nextSibling (this);
+function nextItem (node) {
+return nextSibling (node);
 } // nextItem
 
-function prevItem () {
-return previousSibling (this);
+function prevItem (node) {
+return previousSibling (node);
 } // prevItem
 
-function firstItem () {
-return firstChild(this.parentNode);
+function firstItem (node) {
+return firstChild(node.parentNode);
 } // firstItem 
 
-function lastItem () {
-return lastChild(this.parentNode);
+function lastItem (node) {
+return lastChild(node.parentNode);
 } // lastItem 
 
 
-function upLevel () {
-var $root = $(this).parent().closest ("[role=tree]");
-var $up = $(this).parent().closest("[role=treeitem]");
-if (!$up || !$up.length || !jQuery.contains($root[0], $up[0])) return $(this);
-return $up;
+function upLevel (node) {
+var root = node.closest ("[role=tree]");
+var up = node.closest("[role=treeitem]");
+if (up && root.contains(up)) return up;
+else return node;
 } // upLevel
 
-function downLevel () {
-var $down = $(this).find("[role=group]:first > [role=treeitem]:first");
-if (!$down || !$down.length) return $(this);
-return $down;
+function downLevel (node) {
+var down = node.querySelector("[role=group]:first > [role=treeitem]:first");
+if (down) return down;
+else return node;
 } // downLevel
 
+
+function nextSibling (node) {
+do {
+node = node.nextSibling;
+} while (node && node.nodeType !== 1);
+return node;
+} // nextSibling
+
+function previousSibling (node) {
+do {
+node = node.previousSibling;
+} while (node && node.nodeType !== 1);
+return node;
+} // previousSibling
+
+function firstChild (node) {
+node = node.firstChild;
+if (node.nodeType === 1) return node;
+else return nextSibling(node);
+} // firstChild
+
+function lastChild (node) {
+node = node.lastChild;
+if (node.nodeType === 1) return node;
+else return previousSibling(node);
+} // firstChild
 
 /// API
 return current;
 } // keyboardNavigation
 
+alert ("keyboardNavigation.js loaded");

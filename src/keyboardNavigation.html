@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>keyboardNavigation test</title>
+<script src="jquery.min.js"></script>
+<script src="debug.js"></script>
+
+</head>
+<body>
+<h1>Web Component v1 - test</h1>
+
+<p><a href="#">--start--</a></p>
+<ul>
+<li>item 1</li>
+<li>item 2</li>
+<li>item 3</li>
+</ul>
+<div id="debug" aria-live="polite" role="region" aria-label="debug">
+</div>
+
+
+<script src="keyboardNavigation.js"></script>
+<script>
+var list = document.querySelector("ul");
+var current = keyboardNavigation (list);
+//debug (list.outerHTML);
+current().focus();
+
+alert ("loaded");
+</script>
+
+</body>
+</html>
