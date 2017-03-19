@@ -30,14 +30,21 @@ down: downLevel,
 out: function () {}
 } // actions
 }; // defaultOptions
+options = options || {};
 
 if (nodeName(container) === "select") return;
 
+//debug ("user options before: ", options.toSource());
 options = Object.assign ({}, defaultOptions, options);
+//debug ("user options after assign: ", options.toSource());
 options.keymap = Object.assign ({}, defaultOptions.keymap, options.keymap);
 options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
-options.keymap = processKeymap (options.keymap);
 
+//debug ("keymap before: ", options.keymap.toSource());
+options.keymap = processKeymap (options.keymap);
+//debug ("keymap after: ", options.keymap.toSource());
+
+if (container.matches("ul")) container.style.listStyleType = "none";
 
 if (options.applyAria) applyAria (container, options.type);
 current (initialFocus());
@@ -56,7 +63,7 @@ throw new Error ("invalid key: " + key);
 if (! action) return true;
 
 if (action instanceof Function) {
-debug ("- call function");
+//debug ("- call function");
 performAction (action, e);
 } else if (typeof(action) === "string") {
 //debug ("- fire event ", action);
@@ -71,7 +78,7 @@ return false;
 
 function performAction (action, e) {
 var newNode = action.call (container, getFocus());
-debug ("performAction: ", e.target.outerHTML, newNode.outerHTML);
+//debug ("performAction: ", e.target.outerHTML, newNode.outerHTML);
 
 if (newNode !== e.target) current (newNode);
 } // performAction
@@ -79,7 +86,7 @@ if (newNode !== e.target) current (newNode);
 
 function current (node) {
 if (node) {
-debug ("setting focusedNode");
+//debug ("setting focusedNode");
 setFocus (node);
 return node;
 } else {
@@ -88,7 +95,8 @@ return getFocus ();
 } // current
 
 function initialFocus () {
-return container.querySelector("[role=option]");
+if (options.type === "list") return container.querySelector("[role=option]");
+else if (options.type === "tree") return container.querySelector("[role=treeitem]");
 } // initialFocus
 
 function getFocus () {
@@ -97,16 +105,10 @@ return focusedNode;
 
 function setFocus (node) {
 focusedNode = node;
-debug ("setFocus: ", node.outerHTML);
+focusedNode.focus();
+//debug ("setFocus: ", node.outerHTML);
 } // setFocus
 
-function nodeName (node) {
-if (! node) return "";
-if (! node.nodeName) {
-throw Error ("bad node: " + JSON.stringify(node));
-} // if
-return node.nodeName.toLowerCase();
-} // nodeName
 
 
 // create an observer instance
@@ -140,7 +142,7 @@ return keymap;
 } // processKeymap
 
 function applyAria ($container, type) {
-var name, $groups, $branches, $hasChildren;
+var name, branches;
 type = type.toLowerCase();
 
 if (type === "list") {
@@ -150,27 +152,29 @@ container.setAttribute("role", "listbox");
 e.setAttribute ("role", "option");
 e.setAttribute ("tabindex", "-1");
 });
-debug ("aria applied to ", type);
+//debug ("aria applied to ", type);
 
 } else if (type === "tree") {
 name = nodeName (container);
+//debug ("tree: nodeName = ", name);
 Array.from(container.querySelectorAll(name))
-.forEach (e => setAttribute ("role", "group"));
+.forEach (e => e.setAttribute ("role", "group"));
 
 name = nodeName(container.firstChild);
 branches = Array.from(container.querySelectorAll(name))
-.forEach (e => setAttribute("role", "treeitem"));
+.forEach (e => {e.setAttribute("role", "treeitem"); e.setAttribute("tabindex", "-1");});
 container.setAttribute("role", "tree");
 
 // add aria-expanded to nodes only if they are not leaf nodes
 Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
-.forEach (e => e.setAttribute("aria-expanded", "false"));
+.forEach (e => e.parentNode.setAttribute("aria-expanded", "false"));
 
 } // if
 
 } // applyAria
 
 /// default actions
+
 function nextItem (node) {
 return nextSibling (node);
 } // nextItem
@@ -190,17 +194,18 @@ return lastChild(node.parentNode);
 
 function upLevel (node) {
 var root = node.closest ("[role=tree]");
-var up = node.closest("[role=treeitem]");
+var up = node.parentNode.closest("[role=treeitem]");
 if (up && root.contains(up)) return up;
 else return node;
 } // upLevel
 
 function downLevel (node) {
-var down = node.querySelector("[role=group]:first > [role=treeitem]:first");
+var down = node.querySelector("[role=group] > [role=treeitem]");
 if (down) return down;
 else return node;
 } // downLevel
 
+/// DOM traversal
 
 function nextSibling (node) {
 do {
@@ -227,6 +232,14 @@ node = node.lastChild;
 if (node.nodeType === 1) return node;
 else return previousSibling(node);
 } // firstChild
+
+function nodeName (node) {
+if (! node) return "";
+if (! node.nodeName) {
+throw Error ("bad node: " + JSON.stringify(node));
+} // if
+return node.nodeName.toLowerCase();
+} // nodeName
 
 /// API
 return current;
