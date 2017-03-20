@@ -141,8 +141,6 @@ background: #e9e9e9;
 </template>
 
 <script src="domTraversal.js"></script>
-<script src="jquery.min.js"></script>
-<script src="debug.js"></script>
 <script src="keyboardNavigation.js"></script>
 
 <script>
@@ -390,7 +388,7 @@ this.selectItem(item);
 /// elements and items
 
 selectedElements () {
-return Array.from(this.querySelectorAll(".selected"));
+return Array.from(this.querySelectorAll("[selected]"));
 } // selectedElements
 
 allElements () {
@@ -398,31 +396,30 @@ return Array.from(this.querySelectorAll("[role=option]"));
 } // allElements
 
 selectAll () {
-this.allElements().forEach ((x) => this.selectItem(x));
+this.allElements().forEach (e => this.selectItem(e));
 } // selectAll
 
 unselectAll () {
-this.allElements().forEach ((x) => this.unselectItem(x));
+this.allElements().forEach (e => this.unselectItem(e));
 } // unselectAll
 
 restoreList () {
 this.allElements().forEach (function (element) {
 element.removeAttribute ("hidden");
 }); // forEach
-
-this.refreshItems ();
 } // restoreList
 
 
 selectItem (item) {
+if (item.hasAttribute("selected")) return;
 item.setAttribute('selected', 'selected');
 item.setAttribute('aria-selected', "true");
-
 this.fireChangeEvent();
 this.refreshField();
 } // selectItem
 
 unselectItem (item) {
+if (! item.hasAttribute("selected")) return;
 item.removeAttribute('selected');
 item.setAttribute('aria-selected', false);
 this.fireChangeEvent();
@@ -455,11 +452,9 @@ this.itemElements()
 
 
 itemElements (selector) {
-var items;
 selector = selector || "li:not([hidden])";
-items = this.querySelectorAll(selector);
-return Array.from(items);
-};
+return Array.from(this.querySelectorAll(selector));
+}; // itemElements
 
 createPlaceholder () {
 var placeholder = document.createElement('div');
@@ -527,10 +522,10 @@ return this.querySelectorAll('li[selected]');
 
 selectedItems () {
 var result = [];
-var selectedItems = this.selectedElements();
+var selected = this.selectedElements();
 
-for(var i = 0; i < selectedItems.length; i++) {
-var selectedItem = selectedItems[i];
+for(var i = 0; i < selected.length; i++) {
+var selectedItem = selected[i];
 
 result.push(selectedItem.hasAttribute('value')
     ? selectedItem.getAttribute('value')

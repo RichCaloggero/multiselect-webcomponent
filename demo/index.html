@@ -11,6 +11,10 @@
 </head>
 <body>
 <h1>Multiselect Web Component</h1>
+
+<div id="debug" aria-live="polite" role="region" aria-label="debug">
+</div>
+
 <div id="container" role="application">
 <x-multiselect placeholder="No Selection" label="Select something">
     <li value="1" selected>Item 1</li>
@@ -23,13 +27,18 @@
 </x-multiselect>
 </div>
 
-<div id="debug" aria-live="polite">
-</div>
+
+<script src="../src/jquery.min.js"></script>
+<script src="../src/debug.js"></script>
 
 <script>
+customElements.whenDefined("x-multiselect").then (() => {
 var multiselect = document.querySelector('x-multiselect');
-multiselect.addEventListener('change', function() {
-    console.log('Selected items:', this.selectedItems());
+debug ("hello!");
+debug ("initial selection: ", multiselect.selectedItems());
+multiselect.addEventListener("change", function (e) {
+    debug ("Selected items: ", e.target.selectedItems());
+});
 });
 //alert ("demo loaded");
 </script>
