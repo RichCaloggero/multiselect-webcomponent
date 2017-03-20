@@ -2,6 +2,7 @@
 
 function keyboardNavigation (container, options) {
 var focusedNode = null;
+var children = [];
 var keymap, actions;
 
 var defaultOptions = {
@@ -31,7 +32,7 @@ out: function () {}
 }; // defaultOptions
 options = options || {};
 
-if (nodeName(container) === "select") return;
+if (container.matches("select")) return;
 
 //debug ("user options before: ", options.toSource());
 options = Object.assign ({}, defaultOptions, options);
@@ -43,11 +44,7 @@ options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
 options.keymap = processKeymap (options.keymap);
 //debug ("keymap after: ", options.keymap.toSource());
 
-if (container.matches("ul")) {
-container.style.listStyleType = "none";
-Array.from(container.querySelectorAll (nodeName(container)))
-.forEach (e => e.style.listStyleType = "none");
-} // if
+if (container.matches("ul")) removeBullets (container);
 
 
 if (options.applyAria) applyAria (container, options.type);
@@ -81,7 +78,7 @@ return false;
 }); // keydown
 
 function performAction (action, e) {
-var newNode = action.call (container, getFocus());
+var newNode = action.call (container, getFocusedNode());
 //debug ("performAction: ", e.target.outerHTML, newNode.outerHTML);
 
 if (newNode !== e.target) current (newNode);
@@ -90,23 +87,24 @@ if (newNode !== e.target) current (newNode);
 
 function current (node) {
 if (node) {
-//debug ("setting focusedNode");
 setFocusedNode (node);
 node.focus ();
 return node;
 } else {
-return getFocus ();
+return getFocusedNode ();
 } // if
 } // current
 
 function initialFocus () {
-if (options.type === "list") return container.querySelector("[role=option]");
-else if (options.type === "tree") return container.querySelector("[role=treeitem]");
+var node = getChildren(container)[0];
+//debug ("initialFocus: ", node.outerHTML);
+return node;
 } // initialFocus
 
-function getFocus () {
+function getFocusedNode () {
+//debug ("getFocusedNode: ", focusedNode.outerHTML);
 return focusedNode;
-} // getFocus
+} // getFocusedNode
 
 function setFocusedNode (node) {
 var oldNode;
@@ -117,6 +115,8 @@ oldNode = container.querySelector ("[tabindex='0']");
 if (oldNode) oldNode.setAttribute ("tabindex", "-1");
 focusedNode.setAttribute ("tabindex", "0");
 } // if
+
+//debug ("setFocus to ", node.outerHTML);
 } // setFocusedNode
 
 
@@ -154,18 +154,13 @@ return keymap;
 function applyAria (container, type) {
 var name, branches, children;
 type = type.toLowerCase();
-debug ("applyAria to ", type, nodeName(container));
+//debug ("applyAria to ", type, nodeName(container));
 
-if (nodeName(firstChild(container)) === "slot") children = firstChild(container).assignedNodes();
-else children = container.childNodes;
-children = Array.from(children)
-.filter(e => e.nodeType === 1);
-debug ("applying aria to ", children.length + " children");
 
 
 if (type === "list") {
 container.setAttribute("role", "listbox");
-children.forEach (e => {
+getChildren(container).forEach (e => {
 e.setAttribute ("role", "option");
 e.setAttribute ("tabindex", "-1");
 });
@@ -189,6 +184,23 @@ Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
 } // if
 
 } // applyAria
+
+function getChildren (container) {
+var children;
+if (nodeName(firstChild(container)) === "slot") children = firstChild(container).assignedNodes();
+else children = container.childNodes;
+children = Array.from(children)
+.filter(e => e.nodeType === 1);
+//debug ("applying aria to ", children.length + " children");
+return children;
+} // getChildren
+
+function removeBullets (container) {
+container.style.listStyleType = "none";
+getChildren(container)
+.forEach (e => e.matches("ul") && removeBullets(e));
+} // removeBullets
+
 
 /// default actions
 

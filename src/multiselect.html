@@ -157,7 +157,7 @@ var filterText = "";
 customElements.define ("x-multiselect", class extends HTMLElement {
 constructor () {
 super ();
-debug ("x-multiselect element created");
+//debug ("x-multiselect element created");
 } // constructor
 
 connectedCallback () {
@@ -192,7 +192,7 @@ showStatusMessages: this.getAttribute("showStatusMessages")
 } // initOptions
 
 createRootElement () {
-var root = this.attachShadow({mode: "open"});
+var root = this.attachShadow({delegatesFocus: true, mode: "open"});
 var content = template.content.cloneNode(true);
 
 /*if (window.ShadowDOMPolyfill) {
@@ -202,7 +202,7 @@ WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
 
 root.appendChild(content);
 
-debug ("- root created");
+//debug ("- root created");
 return root;
 } // createRootElement
 
@@ -211,8 +211,9 @@ this.attachHandlers();
 this.refreshField();
 this.refreshItems();
 this.currentItem = keyboardNavigation (this._list, {embedded: true}); // keyboardNavigation
+//debug ("currentItem: ", this.currentItem, " value = ", this.currentItem().outerHTML);
 
-debug ("render complete.");
+//debug ("render complete.");
 } // render
 
 attachHandlers () {
@@ -229,6 +230,7 @@ this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
 handleOpenOnDownArrow (e) {
 if (e.key === "ArrowDown") {
 this.open ();
+//debug ("setting focus to ", this.currentItem().outerHTML);
 this.currentItem().focus();
 return false;
 } // if
@@ -258,7 +260,7 @@ searchText = "";
 searchList (text) {
 var index = findIndex(this.itemElements(), function (element) {
 return element.textContent.toLowerCase().startsWith (text.toLowerCase());
-}, this.focusedItemIndex());
+}, indexOf(this.currentItem()));
 
 if (index >= 0) {
 this.currentItem (this.itemElements()[index]);
@@ -505,7 +507,6 @@ this.refreshField();
 
 open () {
 this.togglePopup(true);
-this.refreshFocusedItem();
 } // open
 
 close () {
@@ -554,7 +555,7 @@ this._status.textContent = text;
 
 }); // custom element
 
-debug ("element x-multiselect registered");
+//debug ("element x-multiselect registered");
 
 /// helpers
 

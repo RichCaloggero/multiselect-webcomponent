@@ -34,7 +34,7 @@ throw Error ("bad node: " + JSON.stringify(node));
 return node.nodeName.toLowerCase();
 } // nodeName
 
-function index (node) {
+function indexOf (node) {
 var s, p = node.parentNode;
 if (! p) return -1;
 s = firstChild(p);
@@ -46,4 +46,4 @@ i += 1;
 } // while
 
 return (s)? i : -1;
-} // index
+} // indexOf
