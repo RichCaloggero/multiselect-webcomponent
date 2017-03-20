@@ -90,6 +90,7 @@ if (newNode !== e.target) current (newNode);
 
 function current (node) {
 if (node) {
+debugger;
 //debug ("setting focusedNode");
 setFocusedNode (node);
 node.focus ();
