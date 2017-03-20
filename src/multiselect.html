@@ -208,8 +208,6 @@ render () {
 this.attachHandlers();
 this.refreshField();
 this.refreshItems();
-this.currentItem = keyboardNavigation (this._list, {embedded: true}); // keyboardNavigation
-//debug ("currentItem: ", this.currentItem, " value = ", this.currentItem().outerHTML);
 
 //debug ("render complete.");
 } // render
@@ -220,9 +218,27 @@ this._field.addEventListener('click', this.fieldClickHandler.bind(this));
 this._typeahead.addEventListener ("input", this.handleListFilter.bind(this));
 this._typeahead.addEventListener ("keydown", this.handleOpenOnDownArrow.bind(this));
 
-this._list.addEventListener('click', this.listClickHandler.bind(this));
 this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
 
+this._list.addEventListener('click', this.clickList.bind(this));
+
+//this._list.addEventListener ("keydown",
+//(e) => (e.key === "Enter" || e.key === " ") && this.toggleCurrentlyFocused());
+
+this.currentItem = keyboardNavigation(this._list, {
+embedded: true, // part of another widget - do not set tabindex="0"
+actions: {
+escape: this.escape.bind(this),
+toggle: this.toggleItem.bind(this),
+}, // actions
+
+keymap: {
+escape: ["Escape"],
+toggle: [" ", "Enter"]
+} // keymap
+}); // keyboardNavigation
+
+//debug ("currentItem: ", this.currentItem, " value = ", this.currentItem().outerHTML);
 } // attachHandlers
 
 handleOpenOnDownArrow (e) {
@@ -308,84 +324,41 @@ this.displayItemCount ();
 } // filterList 
 
 
-handleEnterKey (e) {
-if(this._isOpened) {
-//var focusedItem = this.itemElements()[this._focusedItemIndex];
+toggleCurrentlyFocused () {
 var focusedItem = this.currentItem();
+if(!this._isOpened || !focusedItem) return true;
 
-if (focusedItem.hasAttribute("selected")) this.unselectItem (focusedItem);
-else this.selectItem (focusedItem);
-
+this.toggleItem (this.currentItem());
 this.displayItemCount ("selected items");
-e.stopPropagation ();
-} // if
-} // handleEnterKey
+return false;
+} // toggleSelected
 
-handleArrowDownKey () {
-if (! this._isOpened) {
-this.open ();
-currentItem().focus();
-return;
-} // if
-
-this._focusedItemIndex = (this._focusedItemIndex < this.itemElements().length - 1)
-    ? this._focusedItemIndex + 1
-    : 0;
-
-this.refreshFocusedItem();
-//alert ("focus item " + this._focusedItemIndex);
-};
-
-handleArrowUpKey () {
-this._focusedItemIndex = (this._focusedItemIndex > 0)
-    ? this._focusedItemIndex - 1
-    : this.itemElements().length - 1;
-
-this.refreshFocusedItem();
-};
-
-handleAltArrowDownKey () {
-this.open();
-};
-
-handleAltArrowUpKey () {
-this.close();
-};
-
-refreshFocusedItem () {
-var elements = this.itemElements();
-//alert ("index = " + this._focusedItemIndex + ", item count = " + elements.length );
-//elements[this._focusedItemIndex].focus();
-this.currentItem ($(elements[this._focusedItemIndex]));
-};
-
-handleBackspaceKey (e) {
-var selectedItemElements = this.selectedElements ();
-
-if (e.target === this._typeahead) return true;
-
-if(selectedItemElements.length) {
-this.unselectItem(selectedItemElements[selectedItemElements.length - 1]);
-} // if
-
-} // handleBackspaceKey
-
-handleEscapeKey () {
-this.close();
-this._typeahead.value = "";
-this.restoreList ();
-} // handleEscapeKey
-
-listClickHandler (event) {
-var item = event.target;
+clickList (e) {
+var item = e.target;
 while(item && item.tagName !== 'LI') {
 item = item.parentNode;
 }
 
-this.selectItem(item);
-};
+this.toggleItem (item);
+}; // clickList
+
+escape () {
+this.close();
+this._typeahead.value = "";
+this.restoreList ();
+this.blur();
+} // escape
+
+toggleItem (item) {
+if (this.isSelected(item)) this.unselectItem(item);
+else this.selectItem (item);
+} // toggleItem
 
 /// elements and items
+
+isSelected (item) {
+return (item || this.currentItem()).hasAttribute("selected");
+} // isSelected
 
 selectedElements () {
 return Array.from(this.querySelectorAll("[selected]"));
@@ -489,9 +462,8 @@ removeTag (tag, item, event) {
 var _field = this._field;
 this.unselectItem(item);
 event.stopPropagation();
-//setTimeout (function () {
 _field.firstChild.focus();
-//}, 50);
+this.displayItemCount ("items selected");
 } // removeTag
 
 
