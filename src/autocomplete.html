@@ -6,85 +6,14 @@ overflow: none;
 left: -9999; top: -9999;
 }
 
-.multiselect {
+.autocomplete {
 position: relative;
 box-sizing: border-box;
 display: inline-block;
 width: 20em;
 }
 
-.multiselect-field {
-overflow: hidden;
-padding: .2em .2em 0 .2em;
-border: 1px solid #adadad;
-border-radius: .2em;
-cursor: pointer;
--webkit-user-select: none;
-user-select: none;
-}
-
-.multiselect-field-placeholder {
-padding: .25em .5em;
-margin-bottom: .2em;
-color: #888;
-line-height: 1;
-}
-
-.multiselect-tag {
-position: relative;
-display: inline-block;
-padding: .25em 1.5em .25em .5em;
-border: 1px solid #bdbdbd;
-border-radius: .2em;
-margin: 0 .2em .2em 0;
-line-height: 1;
-vertical-align: middle;
-}
-
-.multiselect-tag:last-child {
-margin-right: 0;
-}
-
-.multiselect-tag:hover {
-background: #efefef;
-}
-
-.multiselect-tag-text {
-min-height: 1em;
-}
-
-.multiselect-tag-remove-button {
-position: absolute;
-top: .25em;
-right: .25em;
-width: 1em;
-height: 1em;
-opacity: 0.3;
-}
-
-.multiselect-tag-remove-button:hover {
-opacity: 1;
-}
-
-.multiselect-tag-remove-button:before,
-.multiselect-tag-remove-button:after {
-content: ' ';
-position: absolute;
-left: .5em;
-width: 2px;
-height: 1em;
-background-color: #333;
-}
-
-.multiselect-tag-remove-button:before {
-transform: rotate(45deg);
-}
-
-.multiselect-tag-remove-button:after {
-transform: rotate(-45deg);
-}
-
-.multiselect-popup {
+.autocomplete-popup {
 position: absolute;
 z-index: 1000;
 display: none;
@@ -97,7 +26,7 @@ border-radius: .2em;
 background: white;
 }
 
-.multiselect-list {
+.autocomplete-list {
 padding: 0;
 margin: 0;
 }
@@ -109,8 +38,8 @@ list-style: none;
 cursor: pointer;
 }
 
-::content li[selected] {
-background: #f3f3f3;
+::content li[hidden] {
+display: none;
 }
 
 ::content li:focus {
@@ -154,7 +83,7 @@ var filterText = "";
 customElements.define ("x-autocomplete", class extends HTMLElement {
 constructor () {
 super ();
-//debug ("x-multiselect element created");
+//debug ("x-autocomplete element created");
 } // constructor
 
 connectedCallback () {
@@ -192,7 +121,7 @@ var root = this.attachShadow({delegatesFocus: true, mode: "open"});
 var content = template.content.cloneNode(true);
 
 /*if (window.ShadowDOMPolyfill) {
-WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
+WebComponents.ShadowCSS.shimStyling(content, 'x-autocomplete');
 }
 */
 
@@ -204,7 +133,6 @@ return root;
 
 render () {
 this.attachHandlers();
-this.refreshItems();
 
 //debug ("render complete.");
 } // render
@@ -301,18 +229,19 @@ this.filterList (this._typeahead.value);
 
 filterList (text) {
 this.restoreList ();
-this.unselectAll ();
 
 if (text) {
-text = text.toLowerCase();
+text = text.toLowerCase().trim();
+debug ("filter: ", text);
 this.allElements().forEach (function (element) {
-if (!element.textContent.toLowerCase().startsWith(text)) element.setAttribute ("hidden", "true");
+var elementText = element.textContent.toLowerCase().trim();
+//debug ("- ", elementText.startsWith(text), elementText);
+if (!elementText.startsWith(text)) element.setAttribute ("hidden", "true");
 }); // forEach
 } // if
 
 this.displayItemCount ();
 } // filterList 
-
 
 
 clickList (e) {
@@ -334,7 +263,9 @@ this.blur();
 chooseItem (item) {
 this._typeahead.value = (item.hasAttribute("value"))?
 item.getAttribute("value") : item.textContent;
-} // toggleItem
+this.close ();
+this.fireChangedEvent ();
+} // chooseItem
 
 /// elements and items
 
@@ -361,45 +292,13 @@ element.removeAttribute ("hidden");
 } // restoreList
 
 
-selectItem (item) {
-if (item.hasAttribute("selected")) return;
-item.setAttribute('selected', 'selected');
-item.setAttribute('aria-selected', "true");
-this.fireChangeEvent();
-this.refreshField();
-} // selectItem
 
-unselectItem (item) {
-if (! item.hasAttribute("selected")) return;
-item.removeAttribute('selected');
-item.setAttribute('aria-selected', false);
-this.fireChangeEvent();
-this.refreshField();
-} // unselectItem
 
 fireChangeEvent () {
 var event = new CustomEvent("change");
 this.dispatchEvent(event);
 };
 
-refreshField () {
-this._field.innerHTML = '';
-var selectedItems = this.selectedElements();
-
-if(! selectedItems.length) {
-this._field.appendChild(this.createPlaceholder());
-return;
-}
-
-for(var i = 0; i < selectedItems.length; i++) {
-this._field.appendChild(this.createTag(selectedItems[i]));
-}
-} // refreshField
-
-refreshItems () {
-this.itemElements()
-.forEach (e => e.setAttribute("aria-selected", e.hasAttribute("selected")));
-} // refreshItems
 
 
 itemElements (selector) {
@@ -407,47 +306,9 @@ selector = selector || "li:not([hidden])";
 return Array.from(this.querySelectorAll(selector));
 }; // itemElements
 
-createPlaceholder () {
-var placeholder = document.createElement('div');
-placeholder.className = 'multiselect-field-placeholder';
-placeholder.setAttribute ("tabindex", "0");
-placeholder.setAttribute ("role", "link");
-//placeholder.setAttribute ("aria-roledescription", "No Selection");
-
-placeholder.textContent = this._options.placeholder;
-return placeholder;
-};
-
-createTag (item) {
-var tag = document.createElement('button');
-tag.className = 'multiselect-tag';
-
-var content = document.createElement('span');
-content.className = 'multiselect-tag-text';
-content.textContent = item.textContent;
-
-//var removeButton = document.createElement('div');
-//removeButton.className = 'multiselect-tag-remove-button';
-tag.addEventListener('click', this.removeTag.bind(this, tag, item));
-
-tag.appendChild(content);
-//tag.appendChild(removeButton);
-
-return tag;
-};
-
-removeTag (tag, item, event) {
-var _field = this._field;
-this.unselectItem(item);
-event.stopPropagation();
-_field.firstChild.focus();
-this.displayItemCount ("items selected");
-} // removeTag
-
 
 attributeChangedCallback (optionName, oldValue, newValue) {
 this._options[optionName] = newValue;
-this.refreshField();
 };
 
 open () {
@@ -466,32 +327,19 @@ this._control.setAttribute("aria-expanded", show? "true" : "false");
 } // togglePopup
 
 
-selectedElements () {
-return this.querySelectorAll('li[selected]');
-} // selectedElements
 
-selectedItems () {
-var result = [];
-var selected = this.selectedElements();
+itemValue (item) {
+if (! item) return "";
+return (item.hasAttribute("value"))?
+item.getAttribute("value") : item.textContent;
+} // itemValue
 
-for(var i = 0; i < selected.length; i++) {
-var selectedItem = selected[i];
-
-result.push(selectedItem.hasAttribute('value')
-    ? selectedItem.getAttribute('value')
-    : selectedItem.textContent);
-} // for
-
-return result;
-} // selectedItems
-
+valueOf () {
+return this._typeahead.value;
+} // valueOf
 
 displayItemCount (text) {
-var message = (text)?
-this.selectedElements().length 
-: this.itemElements().length;
-message += " " + (text || "items");
-this.statusMessage (message);
+this.statusMessage (this.itemElements().length + " " + (text || "items"));
 } // displayItemCount
 
 statusMessage (text) {
@@ -500,7 +348,6 @@ this._status.textContent = text;
 
 }); // custom element
 
-//debug ("element x-multiselect registered");
 
 /// helpers
 
@@ -516,6 +363,6 @@ return result;
 
 })();
 
-				alert	 ("multiselect component loaded");
+alert	 ("autocomplete component loaded");
 </script>
 
