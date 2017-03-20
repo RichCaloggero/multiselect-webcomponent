@@ -126,13 +126,13 @@ var observer = new MutationObserver(function(mutations) {
 mutations.forEach(function(mutation) {
 //debug ("mutation: ", mutation);
 if (options.applyAria) applyAria (container, options.type);
-current ();
+setFocusedNode (initialFocus());
 }); // forEach Mutations
 
 }); // new Observer
 
 // pass in the target node, as well as the observer options
-observer.observe(container, {childList: true});
+//observer.observe(container, {childList: true});
 
 // later, you can stop observing
 //observer.disconnect();
@@ -151,14 +151,21 @@ keymap[key] = action;
 return keymap;
 } // processKeymap
 
-function applyAria ($container, type) {
-var name, branches;
+function applyAria (container, type) {
+var name, branches, children;
 type = type.toLowerCase();
+debug ("applyAria to ", type, nodeName(container));
+
+if (nodeName(firstChild(container)) === "slot") children = firstChild(container).assignedNodes();
+else children = container.childNodes;
+children = Array.from(children)
+.filter(e => e.nodeType === 1);
+debug ("applying aria to ", children.length + " children");
+
 
 if (type === "list") {
 container.setAttribute("role", "listbox");
-(container.querySelectorAll ("li, div, span"))
-.forEach (e => {
+children.forEach (e => {
 e.setAttribute ("role", "option");
 e.setAttribute ("tabindex", "-1");
 });
@@ -215,43 +222,7 @@ if (down) return down;
 else return node;
 } // downLevel
 
-/// DOM traversal
-
-function nextSibling (node) {
-do {
-node = node.nextSibling;
-} while (node && node.nodeType !== 1);
-return node;
-} // nextSibling
-
-function previousSibling (node) {
-do {
-node = node.previousSibling;
-} while (node && node.nodeType !== 1);
-return node;
-} // previousSibling
-
-function firstChild (node) {
-node = node.firstChild;
-if (node.nodeType === 1) return node;
-else return nextSibling(node);
-} // firstChild
-
-function lastChild (node) {
-node = node.lastChild;
-if (node.nodeType === 1) return node;
-else return previousSibling(node);
-} // firstChild
-
-function nodeName (node) {
-if (! node) return "";
-if (! node.nodeName) {
-throw Error ("bad node: " + JSON.stringify(node));
-} // if
-return node.nodeName.toLowerCase();
-} // nodeName
-
-/// API
+/// API		
 return current;
 } // keyboardNavigation
 

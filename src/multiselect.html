@@ -131,8 +131,8 @@ background: #e9e9e9;
 
 <div class="multiselect-field" role="group" aria-label="Current Selection"></div>
 <div class="multiselect-popup">
-<ul class="multiselect-list" role="listbox" aria-multiselectable="true">
-<content select="li"></content>
+<ul class="multiselect-list" aria-multiselectable="true">
+<slot></slot>
 </ul>
 </div>
 
@@ -140,6 +140,7 @@ background: #e9e9e9;
 </div>
 </template>
 
+<script src="domTraversal.js"></script>
 <script src="jquery.min.js"></script>
 <script src="debug.js"></script>
 <script src="keyboardNavigation.js"></script>
@@ -148,7 +149,7 @@ background: #e9e9e9;
 "use strict";
 var template = document.querySelector('#multiselectTemplate');
 
-(function($, window) {
+(function() {
 var searchTimer = null;
 var searchText = "";
 var filterText = "";
@@ -192,7 +193,7 @@ showStatusMessages: this.getAttribute("showStatusMessages")
 
 createRootElement () {
 var root = this.attachShadow({mode: "open"});
-var content = document.importNode(template.content, true);
+var content = template.content.cloneNode(true);
 
 /*if (window.ShadowDOMPolyfill) {
 WebComponents.ShadowCSS.shimStyling(content, 'x-multiselect');
@@ -209,13 +210,8 @@ render () {
 this.attachHandlers();
 this.refreshField();
 this.refreshItems();
-this.currentItem = keyboardNavigation.call (this, this._list, {
-embedded: true
-}); // keyboardNavigation
+this.currentItem = keyboardNavigation (this._list, {embedded: true}); // keyboardNavigation
 
-window.addEventListener ("HTMLImportsLoaded", function () {
-debug ("HTMLImportLoaded");
-});
 debug ("render complete.");
 } // render
 
@@ -233,7 +229,7 @@ this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
 handleOpenOnDownArrow (e) {
 if (e.key === "ArrowDown") {
 this.open ();
-refreshFocusedItem ();
+this.currentItem().focus();
 return false;
 } // if
 
@@ -244,31 +240,6 @@ fieldClickHandler () {
 //this._isOpened ? this.close() : this.open();
 } // fieldClickHandler 
 
-keyDownHandler (event) {
-stopTimer ();
-
-switch(event.which) {
-case 8:
-    return this.handleBackspaceKey(event);
-    break;
-case 13: case 32:
-    this.handleEnterKey(event);
-    break;
-case 27:
-    this.handleEscapeKey();
-    break;
-case 38:
-    event.altKey ? this.handleAltArrowUpKey() : this.handleArrowUpKey();
-    break;
-case 40:
-    event.altKey ? this.handleAltArrowDownKey() : this.handleArrowDownKey();
-    break;
-default:
-    return true;
-} // switch
-event.preventDefault();
-
-} // keydown handler
 
 // individual key handlers
 
@@ -353,7 +324,7 @@ e.stopPropagation ();
 handleArrowDownKey () {
 if (! this._isOpened) {
 this.open ();
-this.refreshFocusedItem();
+currentItem().focus();
 return;
 } // if
 
@@ -476,16 +447,8 @@ this._field.appendChild(this.createTag(selectedItems[i]));
 } // refreshField
 
 refreshItems () {
-var itemElements = this.itemElements();
-
-for(var i = 0; i < itemElements.length; i++) {
-var itemElement = itemElements[i];
-itemElement.setAttribute("role", "option");
-itemElement.setAttribute("aria-selected", itemElement.hasAttribute("selected"));
-itemElement.setAttribute("tabindex", -1);
-}
-
-this._focusedItemIndex = 0;
+this.itemElements()
+.forEach (e => e.setAttribute("aria-selected", e.hasAttribute("selected")));
 } // refreshItems
 
 
@@ -605,8 +568,8 @@ var result = /\w/.test (x);
 return result;
 } // isAlphanumeric
 
-})($, window);
+})();
 
-//alert ("multiselect component loaded");
+				alert	 ("multiselect component loaded");
 </script>
 
