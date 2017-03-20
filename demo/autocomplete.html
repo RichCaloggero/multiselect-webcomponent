@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>Autocomplete</title>
+<script src="../src/webcomponents-hi-sd-ce.js"></script>
+<!--<script src="../src/webcomponents-hi-sd-ce.js.map"></script>-->
+
+<link rel="import" href="../src/autocomplete.html">
+
+</head>
+<body>
+<h1>Autocomplete Web Component</h1>
+
+<div id="debug" aria-live="polite" role="region" aria-label="debug">
+</div>
+
+<div id="container" role="application">
+<x-autocomplete label="Choose Something"><li>
+chili
+</li><li>
+hamberger
+</li><li>
+ham
+</li><li>
+chocolate
+</li><li>
+Chinese food
+</li><li>
+peanuts
+</li><li>
+chocolate cake
+</li></x-autocomplete>
+</div>
+
+
+<script src="../src/jquery.min.js"></script>
+<script src="../src/debug.js"></script>
+
+<script>
+customElements.whenDefined("x-autocomplete").then (() => {
+var autocomplete = document.querySelector('x-autocomplete');
+autocomplete.addEventListener("change", function (e) {
+debug ("Value: ", e.target.value());
+});
+});
+//alert ("demo loaded");
+</script>
+</body>
+</html>
