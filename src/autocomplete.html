@@ -142,7 +142,6 @@ var self = this;
 this._typeahead.addEventListener ("input", this.handleListFilter.bind(this));
 this._typeahead.addEventListener ("keydown", this.handleOpenOnDownArrow.bind(this));
 
-this._list.addEventListener ("keypress", this.handleListSearch.bind(this));
 
 this._list.addEventListener('click', this.clickList.bind(this));
 
@@ -176,54 +175,6 @@ return false;
 return true;
 } // handleOpenOnDownArrow
 
-
-// searching and filtering
-
-handleListSearch (e) {
-var self = this;
-var character = e.char || String.fromCharCode (e.which || e.keyCode);
-if (! isAlphanumeric(character)) return true;
-searchText += character;
-
-searchTimer = setTimeout (function () {
-self.searchList (searchText);
-searchText = "";
-}, this.searchTimeout || 200); // milliseconds
-} // handleListSearch
-
-searchList (text) {
-var index = findIndex(this.itemElements(), function (element) {
-return element.textContent.toLowerCase().startsWith (text.toLowerCase());
-}, indexOf(this.currentItem()));
-
-if (index >= 0) {
-this.currentItem (this.itemElements()[index]);
-return index;
-} else {
-return -1;
-} // if
-
-function findIndex (list, test, start) {
-start = start || 0;
-var length = list.length;
-
-if (length === 0) return -1;
-if (start < 0) start = length+start;
-start = (start+1) % length;
-
-for (var i=start; i<length; i++) {
-if (test(list[i])) return i;
-} // for
-
-if (start > 0) {
-for (var i=0; i<start; i++) {
-if (test(list[i])) return i;
-} // for
-} // if
-
-return -1;
-} // findIndex
-} // searchList
 
 handleListFilter () {
 this.filterList (this._typeahead.value);
@@ -351,17 +302,8 @@ this._status.textContent = text;
 }); // custom element
 
 
-/// helpers
 
-function stopTimer () {
-clearTimeout (searchTimer);
-} // stopTimer
 
-function isAlphanumeric (x) {
-var result = /\w/.test (x);
-//alert ("isAlphanumeric " + x + " is " + result);
-return result;
-} // isAlphanumeric
 
 })();
 

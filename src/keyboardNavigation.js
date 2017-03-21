@@ -2,7 +2,9 @@
 
 function keyboardNavigation (container, options) {
 var focusedNode = null;
-var children = [];
+var searchTimer = null;
+var searchText = "";
+var searchTimeout = 400; // milliseconds
 var keymap, actions;
 
 var defaultOptions = {
@@ -12,8 +14,8 @@ applyAria: true,
 activeNodeSelector: ":not([hidden])",
 wrap: false,
 
-
 keymap: {
+search: "[_-0-9a-zA-Z]",
 next: ["ArrowDown", "ArrowRight"],
 prev: ["ArrowUp", "ArrowLeft"],
 first: ["Home"],
@@ -55,12 +57,16 @@ container.addEventListener ("keydown", function (e) {
 var key = e.key || e.which || e.keyCode;
 var actionName = options.keymap[key];
 var action = options.actions[actionName]; // action
+var character = e.char || String.fromCharCode (e.which || e.keyCode);
 
 if (! key) {
 alert ("invalid key: " + key);
 throw new Error ("invalid key: " + key);
 } // if
 //debug ("key: ", key, actionName, typeof(action));
+stopTimer ();
+
+if (isAlphanumeric(character)) return handleSearchKey (character);
 
 if (! action) return true;
 
@@ -233,6 +239,66 @@ var down = node.querySelector("[role=group] > [role=treeitem]");
 if (down) return down;
 else return node;
 } // downLevel
+
+/// search
+
+function handleSearchKey (character) {
+searchText += character;
+
+searchTimer = setTimeout (function () {
+searchList (searchText);
+searchText = "";
+}, searchTimeout || 200); // milliseconds
+} // handleListSearch
+
+function searchList (text) {
+if (text) {
+text = text.toLowerCase().trim();
+var node = find (getNodes(container), function (element) {
+var elementText = element.textContent.toLowerCase().trim();
+//debug ("- ", elementText);
+return elementText.startsWith (text);
+}, indexOf(current()));
+
+if (node) current (node);
+return node;
+} // if
+
+return null;
+
+function find (list, test, start, index) {
+//debug ("findIndex: ", start);
+start = start || 0;
+var length = list.length;
+
+if (length === 0) return (index)? -1 : null;
+if (start < 0) start = length+start;
+start = (start+1) % length;
+
+for (var i=start; i<length; i++) {
+if (test(list[i])) return (index)? i : list[i];
+} // for
+
+if (start > 0) {
+for (var i=0; i<start; i++) {
+if (test(list[i])) return (index)? i : list[i];
+} // for
+} // if
+
+//debug ("found nothing");
+return (index)? -1 : null;
+} // findIndex
+} // searchList
+
+function stopTimer () {
+clearTimeout (searchTimer);
+} // stopTimer
+
+function isAlphanumeric (x) {
+var result = /\w/.test (x);
+//alert ("isAlphanumeric " + x + " is " + result);
+return result;
+} // isAlphanumeric
 
 /// API		
 return current;
