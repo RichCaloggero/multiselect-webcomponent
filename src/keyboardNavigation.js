@@ -8,8 +8,9 @@ var keymap, actions;
 var defaultOptions = {
 type: "list", // list, tree, or menu
 embedded: false, // if embedded in another widget, will not maintain tabindex="0" on container or child element
-wrap: false,
 applyAria: true,
+activeNodeSelector: ":not([hidden])",
+wrap: false,
 
 
 keymap: {
@@ -96,7 +97,7 @@ return getFocusedNode ();
 } // current
 
 function initialFocus () {
-var node = getChildren(container)[0];
+var node = getNodes(container)[0];
 //debug ("initialFocus: ", node.outerHTML);
 return node;
 } // initialFocus
@@ -160,7 +161,7 @@ type = type.toLowerCase();
 
 if (type === "list") {
 container.setAttribute("role", "listbox");
-getChildren(container).forEach (e => {
+getNodes(container).forEach (e => {
 e.setAttribute ("role", "option");
 e.setAttribute ("tabindex", "-1");
 });
@@ -185,19 +186,18 @@ Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
 
 } // applyAria
 
-function getChildren (container) {
-var children;
-if (nodeName(firstChild(container)) === "slot") children = firstChild(container).assignedNodes();
-else children = container.childNodes;
-children = Array.from(children)
-.filter(e => e.nodeType === 1);
-//debug ("applying aria to ", children.length + " children");
-return children;
-} // getChildren
+function getNodes (container) {
+return Array.from(
+(nodeName(firstChild(container)) === "slot")? 
+firstChild(container).assignedNodes()
+: container.childNodes
+).filter(e => e.nodeType === 1)
+.filter (e => e.matches(options.activeNodeSelector));
+} // getNodes
 
 function removeBullets (container) {
 container.style.listStyleType = "none";
-getChildren(container)
+getNodes(container)
 .forEach (e => e.matches("ul") && removeBullets(e));
 } // removeBullets
 
@@ -205,11 +205,11 @@ getChildren(container)
 /// default actions
 
 function nextItem (node) {
-return nextSibling (node);
+return nextSibling (node, options.activeNode);
 } // nextItem
 
 function prevItem (node) {
-return previousSibling (node);
+return previousSibling (node, options.activeNode);
 } // prevItem
 
 function firstItem (node) {

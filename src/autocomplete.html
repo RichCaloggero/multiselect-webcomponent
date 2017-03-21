@@ -149,6 +149,8 @@ this._list.addEventListener('click', this.clickList.bind(this));
 
 this.currentItem = keyboardNavigation(this._list, {
 embedded: true, // part of another widget - do not set tabindex="0"
+activeNode: ":not([hidden])",
+
 actions: {
 escape: this.escape.bind(this),
 choose: this.chooseItem.bind(this)

@@ -1,17 +1,20 @@
+"use strict";
 /// DOM traversal
 
-function nextSibling (node) {
-do {
+function nextSibling (node, selector = "*") {
+while (node) {
 node = node.nextSibling;
-} while (node && node.nodeType !== 1);
-return node;
+if (node && node.nodeType === 1 && node.matches(selector)) return node;
+} // while
+return null;
 } // nextSibling
 
-function previousSibling (node) {
-do {
+function previousSibling (node, selector = "*") {
+while (node) {
 node = node.previousSibling;
-} while (node && node.nodeType !== 1);
-return node;
+if (node && node.nodeType === 1 && node.matches(selector)) return node;
+} // while
+return null;
 } // previousSibling
 
 function firstChild (node) {
