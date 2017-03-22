@@ -202,10 +202,15 @@ firstChild(container).assignedNodes()
 } // getNodes
 
 function removeBullets (container) {
+debug ("removeBullets: ", container.nodeName, container.className);
 container.style.listStyleType = "none";
-getNodes(container)
-.forEach (e => e.matches("ul") && removeBullets(e));
+
+getNodes(container).forEach (function (e) {
+var list = e.querySelector("ul,ol");
+if (list) removeBullets (list);
+}); // forEach
 } // removeBullets
+
 
 
 /// default actions
