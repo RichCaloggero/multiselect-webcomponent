@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>Tree</title>
+<script src="../src/webcomponents-hi-sd-ce.js"></script>
+<!--<script src="../src/webcomponents-hi-sd-ce.js.map"></script>-->
+
+<link rel="import" href="../src/tree.html">
+
+</head>
+<body>
+<h1>Tree Web Component</h1>
+
+<div id="debug" aria-live="polite" role="region" aria-label="debug">
+</div>
+
+<x-tree label="Choose some stuff"><li>
+<span>1.1</span>
+</li><li>
+<span>1.2</span>
+<ul><li>
+<span>2.1</span>
+</li><li>
+<span>2.2</span>
+</li><li>
+<span>2.3</span>
+</li></ul>
+</li><li>
+<span>1.3</span>
+</li></x-tree>
+</div>
+
+
+<script src="../src/jquery.min.js"></script>
+<script src="../src/debug.js"></script>
+
+<script>
+customElements.whenDefined("x-tree").then (() => {
+var tree = document.querySelector('x-tree');
+tree.addEventListener("change", function (e) {
+debug ("Value: ", e.target.value());
+});
+});
+//alert ("tree demo loaded");
+</script>
+</body>
+</html>
