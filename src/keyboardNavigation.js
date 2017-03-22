@@ -164,7 +164,6 @@ type = type.toLowerCase();
 //debug ("applyAria to ", type, nodeName(container));
 
 
-
 if (type === "list") {
 container.setAttribute("role", "listbox");
 getNodes(container).forEach (e => {
@@ -174,22 +173,22 @@ e.setAttribute ("tabindex", "-1");
 //debug ("aria applied to ", type);
 
 } else if (type === "tree") {
-name = nodeName (container);
-//debug ("tree: nodeName = ", name);
-Array.from(container.querySelectorAll(name))
-.forEach (e => e.setAttribute ("role", "group"));
+container.setAttribute ("role", "tree");
+getNodes(container).forEach (function _applyAria (branch) {
 
-name = nodeName(container.firstChild);
-branches = Array.from(container.querySelectorAll(name))
-.forEach (e => {e.setAttribute("role", "treeitem"); e.setAttribute("tabindex", "-1");});
-container.setAttribute("role", "tree");
+setRole (branch);
+Array.from(branch.querySelectorAll("li,ul")).forEach (e => setRole (e));
 
 // add aria-expanded to nodes only if they are not leaf nodes
-Array.from(container.querySelectorAll("[role=treeitem] > [role=group]"))
+Array.from(branch.querySelectorAll("[role=group]"))
 .forEach (e => e.parentNode.setAttribute("aria-expanded", "false"));
 
+function setRole (e) {
+if (nodeName(e) === "ul") e.setAttribute ("role", "group");
+else e.setAttribute ("role", "treeitem");
+} // setRole
+}); // forEach branch
 } // if
-
 } // applyAria
 
 function getNodes (container) {
@@ -202,7 +201,7 @@ firstChild(container).assignedNodes()
 } // getNodes
 
 function removeBullets (container) {
-debug ("removeBullets: ", container.nodeName, container.className);
+//debug ("removeBullets: ", container.nodeName, container.className);
 container.style.listStyleType = "none";
 
 getNodes(container).forEach (function (e) {
