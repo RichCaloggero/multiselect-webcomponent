@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="UTF-8">
+<title>Flatten</title>
+</head>
+<body>
+<h1>Flatten</h1>
+
+<h2>Results</h2>
+<div id="debug" aria-live="polite" role="region" aria-label="debug">
+</div>
+
+<hr><h2>Data</h2>
+
+<ul class="tree"><li>
+<span>1.1</span>
+</li><li>
+<span>1.2</span>
+<ul><li>
+<span>2.1</span>
+</li><li>
+<span>2.2</span>
+<ul><li>
+<span>3.1</span>
+</li><li>
+<span>3.2</span>
+</li><li>
+<span>3.3</span>
+</li></ul>
+</li><li>
+<span>2.3</span>
+</li></ul>
+</li><li>
+<span>1.3</span>
+</li></ul>
+
+<script src="jquery.min.js"></script>
+<script src="debug.js"></script>
+<script src="domTraversal.js"></script>
+
+<script>
+getAllNodes (document.querySelector(".tree"), "li")
+.forEach (node => debug(node.querySelector("span").textContent));
+
+alert ("tree demo loaded");
+</script>
+</body>
+</html>

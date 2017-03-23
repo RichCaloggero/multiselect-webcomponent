@@ -18,14 +18,18 @@ return null;
 } // previousSibling
 
 function firstChild (node) {
+if (! node) return null;
 node = node.firstChild;
+if (! node) return null;
 if (node.nodeType === 1) return node;
 else return nextSibling(node);
 } // firstChild
 
 function lastChild (node) {
+if (! node) return null;
 node = node.lastChild;
-if (node.nodeType === 1) return node;
+if (! node) return null;
+if (node && node.nodeType === 1) return node;
 else return previousSibling(node);
 } // firstChild
 
@@ -39,6 +43,7 @@ return node.nodeName.toLowerCase();
 
 function indexOf (node) {
 var s, p = node.parentNode;
+if (! node) return -1;
 if (! p) return -1;
 s = firstChild(p);
 var i = 0;
@@ -50,3 +55,33 @@ i += 1;
 
 return (s)? i : -1;
 } // indexOf
+
+function getAllNodes (nodes, selector = "*") {
+return flatten (nodes)
+.filter (node => node.matches(selector));
+
+function flatten (node) {
+if (length in node) {
+node = Array.from(node);
+return flatten(node[0]).concat(flatten(node.slice(1)));
+} else {
+if (! node || node.nodeType !== 1) return [];
+return flatten(node.childNodes).concat (
+nodeName(node) === "slot"? flatten(node.assignedNodes()) : node
+);
+} // if
+} // flatten
+
+/*function flatten (node) {
+debug ("flatten: ", (length in node)? node.length : nodeName(node));
+if (length in node) {
+node = Array.from(node);
+return flatten(node[0]).concat (flatten(node.slice(1)));
+} else {
+return (node && node.nodeType === 1)? (
+(nodeName(node) === "slot")? flatten(node.assignedNodes) : [node]
+).concat(Array.from(node.querySelectorAll("*"))) : [];
+} // if
+} // flatten
+*/
+} // getAllNodes

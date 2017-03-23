@@ -47,6 +47,8 @@ options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
 options.keymap = processKeymap (options.keymap);
 //debug ("keymap after: ", options.keymap.toSource());
 
+debug ("All nodes:");
+getNodes ("li").forEach (x => debug(x.querySelector("span").textContent));
 if (container.matches("ul")) removeBullets (container);
 
 
@@ -103,7 +105,7 @@ return getFocusedNode ();
 } // current
 
 function initialFocus () {
-var node = getNodes(container)[0];
+var node = getNodes("[role=option]")[0];
 //debug ("initialFocus: ", node.outerHTML);
 return node;
 } // initialFocus
@@ -165,51 +167,35 @@ type = type.toLowerCase();
 
 
 if (type === "list") {
-container.setAttribute("role", "listbox");
-getNodes(container).forEach (e => {
-e.setAttribute ("role", "option");
-e.setAttribute ("tabindex", "-1");
+getNodes("ul").forEach (node => node.setAttribute ("role", "listbox"));
+getNodes("li").forEach (node => {
+node.setAttribute ("role", "option");
+node.setAttribute ("tabindex", "-1");
 });
 //debug ("aria applied to ", type);
 
 } else if (type === "tree") {
+getNodes ("ul").forEach (node => node.setAttribute("role", "group"));
+getNodes ("li").forEach (node => {
+if (node.querySelector("ul")) node.setAttribute("aria-expanded", "false");
+node.setAttribute("role", "treeitem");
+node.setAttribute ("tabindex", "-1");
+node.setAttribute ("aria-selected", "false");
+});
 container.setAttribute ("role", "tree");
-getNodes(container).forEach (function _applyAria (branch) {
 
-setRole (branch);
-Array.from(branch.querySelectorAll("li,ul")).forEach (e => setRole (e));
-
-// add aria-expanded to nodes only if they are not leaf nodes
-Array.from(branch.querySelectorAll("[role=group]"))
-.forEach (e => e.parentNode.setAttribute("aria-expanded", "false"));
-
-function setRole (e) {
-if (nodeName(e) === "ul") e.setAttribute ("role", "group");
-else e.setAttribute ("role", "treeitem");
-} // setRole
-}); // forEach branch
 } // if
 } // applyAria
 
-function getNodes (container) {
-return Array.from(
-(nodeName(firstChild(container)) === "slot")? 
-firstChild(container).assignedNodes()
-: container.childNodes
-).filter(e => e.nodeType === 1)
-.filter (e => e.matches(options.activeNodeSelector));
-} // getNodes
 
 function removeBullets (container) {
 //debug ("removeBullets: ", container.nodeName, container.className);
-container.style.listStyleType = "none";
-
-getNodes(container).forEach (function (e) {
-var list = e.querySelector("ul,ol");
-if (list) removeBullets (list);
-}); // forEach
+getNodes("ul").forEach (node => node.style.listStyleType = "none");
 } // removeBullets
 
+function getNodes (selector, nodes = container) {
+return getAllNodes (nodes, selector);
+} // getNodes
 
 
 /// default actions
