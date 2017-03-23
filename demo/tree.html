@@ -45,10 +45,16 @@
 <script>
 customElements.whenDefined("x-tree").then (() => {
 var tree = document.querySelector('x-tree');
+
 tree.addEventListener("change", function (e) {
-debug ("Value: ", e.target.value());
-});
-});
+debug ("Value: ", tree.value());
+}); // change
+
+tree.addEventListener ("done", function () {
+tree.removeEventListener("change");
+debug ("done: ", tree.value());
+}); // done
+}); // loaded
 //alert ("tree demo loaded");
 </script>
 </body>

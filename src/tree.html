@@ -99,13 +99,13 @@ activeNode: ":not([hidden])",
 actions: {
 escape: this.escape.bind(this),
 toggleSelected: this.toggleSelected.bind(this),
-value: this.value.bind(this)
+done: this.done.bind(this)
 }, // actions
 
 keymap: {
 escape: ["Escape"],
 toggleSelected: [" "],
-value: ["Enter"],
+done: ["Enter"],
 up: ["ArrowLeft"], down: ["ArrowRight"]
 } // keymap
 }); // keyboardNavigation
@@ -123,7 +123,7 @@ this.restoreList ();
 
 if (text) {
 text = text.toLowerCase().trim();
-debug ("filter: ", text);
+//debug ("filter: ", text);
 this.allElements().forEach (function (element) {
 var elementText = element.textContent.toLowerCase().trim();
 //debug ("- ", elementText.startsWith(text), elementText);
@@ -146,20 +146,63 @@ this.toggleSelected(item);
 
 escape () {
 this.unselectAll();
+this.fireDoneEvent ();
+this.statusMessage (this.selectedNodes().length + " selected items");
+document.activeElement.blur();
 } // escape
 
 toggleSelected(node) {
-if (this.isSelected(node)) unselectNode (node);
-else selectNode (node);
+if (this.isSelected(node)) this.unselectNode (node);
+else this.selectNode (node);
 
-this.fireChangedEvent ();
+//this.fireChangeEvent ();
 } // toggleSelected
+
+valueOf (node) {
+if (! node) return "";
+return (node.hasAttribute("value"))?
+node.getAttribute("value")
+: (firstChild(node).textContent || node.textContent);
+} // nodeValue
+
+value () {
+//debug ("number of selected nodes: ", this.selectedNodes().length);
+return this.selectedNodes()
+.map (e => this.valueOf(e));
+} // value
+
+done () {
+this.fireDoneEvent ();
+} // done
 
 /// elements and items
 
+isSelectable (node) {
+return node && node.nodeType === 1 && node.hasAttribute("aria-selected");
+} // isSelectable
+
+selectNode (node) {
+if (this.isSelectable(node) && !this.isSelected(node)) {
+node.setAttribute("aria-selected", "true");
+this.fireChangeEvent (node);
+} // if
+} // selectNode
+
+unselectNode (node) {
+if (this.isSelectable(node) && this.isSelected(node)) {
+node.setAttribute("aria-selected", "false");
+this.fireChangeEvent (node);
+} // if
+} // unselectNode
+
+isSelected (node) {
+return this.isSelectable(node) && node.getAttribute("aria-selected") === "true";
+} // isSelected
+
+
 selectedNodes () {
-return Array.from(this.querySelectorAll("li[selected]"));
-} // selectedElements
+return Array.from(this.querySelectorAll("[role=treeitem][aria-selected='true']"));
+} // selectedNodes
 
 allNodes () {
 return Array.from(this.querySelectorAll("[role=treeitem]"));
@@ -173,17 +216,18 @@ unselectAll () {
 this.allNodes().forEach (e => this.unselectNode(e));
 } // unselectAll
 
+// events
 
 fireChangeEvent () {
 var event = new CustomEvent("change");
 this.dispatchEvent(event);
-};
+}; // fireChangeEvent
 
+fireDoneEvent () {
+var event = new CustomEvent("done");
+this.dispatchEvent(event);
+} // fireDoneEvent
 
-treeNodes (selector) {
-selector = selector || ":not([hidden])";
-return Array.from(this.querySelectorAll(selector));
-}; // treeNodes
 
 
 attributeChangedCallback (optionName, oldValue, newValue) {
@@ -191,16 +235,6 @@ this._options[optionName] = newValue;
 };
 
 
-valueOf (node) {
-if (! node) return "";
-return (node.hasAttribute("value"))?
-node.getAttribute("value") : node.textContent;
-} // nodeValue
-
-value () {
-return this.selectedNodes()
-.map (e => valueOf(e));
-} // value
 
 
 statusMessage (text) {

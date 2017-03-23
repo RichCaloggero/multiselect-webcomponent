@@ -47,8 +47,6 @@ options.actions = Object.assign ({}, defaultOptions.actions, options.actions);
 options.keymap = processKeymap (options.keymap);
 //debug ("keymap after: ", options.keymap.toSource());
 
-debug ("All nodes:");
-getNodes ("li").forEach (x => debug(x.querySelector("span").textContent));
 if (container.matches("ul")) removeBullets (container);
 
 
@@ -105,7 +103,7 @@ return getFocusedNode ();
 } // current
 
 function initialFocus () {
-var node = getNodes("[role=option]")[0];
+var node = getNodes("li")[0];
 //debug ("initialFocus: ", node.outerHTML);
 return node;
 } // initialFocus
