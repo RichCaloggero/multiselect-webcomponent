@@ -176,9 +176,9 @@ node.setAttribute ("tabindex", "-1");
 getNodes ("ul").forEach (node => node.setAttribute("role", "group"));
 getNodes ("li").forEach (node => {
 if (node.querySelector("ul")) node.setAttribute("aria-expanded", "false");
+else node.setAttribute ("aria-selected", "false");
 node.setAttribute("role", "treeitem");
 node.setAttribute ("tabindex", "-1");
-node.setAttribute ("aria-selected", "false");
 });
 container.setAttribute ("role", "tree");
 
@@ -292,4 +292,4 @@ return result;
 return current;
 } // keyboardNavigation
 
-alert ("keyboardNavigation.js loaded");
+//alert ("keyboardNavigation.js loaded");

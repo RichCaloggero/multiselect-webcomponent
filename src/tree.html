@@ -8,14 +8,12 @@ left: -9999; top: -9999;
 
 </style>
 
-<div class="tree" role="group">
-<label>
-<span class="text"></span>
+<div class="tree" role="application" aria-labelledby="label">
+<span id="label"></span>
 
 <ul class="treeNodes">
 <slot select="li"></slot>
 </ul>
-</label>
 
 <div class="status screen-reader-only" aria-live="polite"></div>
 </div>
@@ -50,11 +48,11 @@ this.initOptions();
 this._filterText = "";
 this._root = this.createRootElement();
 this._container = this._root.querySelector('.tree');
-this._labelText = this._root.querySelector('label .text');
+this._label = this._root.querySelector("#label");
 this._treeNodes = this._root.querySelector(".treeNodes");
 this._status = this._root.querySelector('.status');
 
-this._labelText.textContent = this._options.label;
+this._label.textContent = this._options.label;
 this._status.classList.toggle ("screen-reader-only", !this._options.showStatusMessages);
 
 } // init
@@ -249,6 +247,6 @@ this._status.textContent = text;
 
 })();
 
-alert	 ("tree component loaded");
+//alert	 ("tree component loaded");
 </script>
 
