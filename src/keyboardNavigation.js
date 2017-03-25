@@ -15,7 +15,6 @@ activeNodeSelector: ":not([hidden])",
 wrap: false,
 
 keymap: {
-search: "[_-0-9a-zA-Z]",
 next: ["ArrowDown", "ArrowRight"],
 prev: ["ArrowUp", "ArrowLeft"],
 first: ["Home"],
@@ -30,6 +29,7 @@ last: lastItem,
 
 up: upLevel,
 down: downLevel,
+
 out: function () {}
 } // actions
 }; // defaultOptions
@@ -53,11 +53,18 @@ if (container.matches("ul")) removeBullets (container);
 if (options.applyAria) applyAria (container, options.type);
 setFocusedNode(initialFocus());
 
+container.addEventListener ("keypress", function (e) {
+var character = e.char || String.fromCharCode (e.which);
+if (e.which === 0) return true;
+if (isAlphanumeric(character)) return handleSearchKey (character);
+return true;
+}); // keypress
+
+
 container.addEventListener ("keydown", function (e) {
 var key = e.key || e.which || e.keyCode;
 var actionName = options.keymap[key];
 var action = options.actions[actionName]; // action
-var character = e.char || String.fromCharCode (e.which || e.keyCode);
 
 if (! key) {
 alert ("invalid key: " + key);
@@ -65,8 +72,6 @@ throw new Error ("invalid key: " + key);
 } // if
 //debug ("key: ", key, actionName, typeof(action));
 stopTimer ();
-
-if (isAlphanumeric(character)) return handleSearchKey (character);
 
 if (! action) return true;
 
@@ -92,9 +97,9 @@ if (newNode !== e.target) current (newNode);
 } // performAction
 
 
-function current (node) {
+function current (node, search) {
 if (node) {
-setFocusedNode (node);
+setFocusedNode (node, search);
 node.focus ();
 return node;
 } else {
@@ -113,18 +118,30 @@ function getFocusedNode () {
 return focusedNode;
 } // getFocusedNode
 
-function setFocusedNode (node) {
-var oldNode;
+function setFocusedNode (node, search) {
 if (! node) return;
 focusedNode = node;
 if (! options.embedded) {
-oldNode = container.querySelector ("[tabindex='0']");
-if (oldNode) oldNode.setAttribute ("tabindex", "-1");
+getNodes("[tabindex='0']")
+.forEach (node => node.setAttribute("tabindex", "-1"));
 focusedNode.setAttribute ("tabindex", "0");
 } // if
 
-//debug ("setFocus to ", node.outerHTML);
+if (search && options.type === "tree") definePath (node);
 } // setFocusedNode
+
+function definePath (node) {
+var root = node.closest ("[role=tree]");
+if (! node || !root) return;
+getNodes("[role=treeitem][aria-expanded='true']")
+.forEach (node => node.setAttribute("aria-expanded", "false"));
+
+while (node && root.contains(node)) {
+node = node.parentElement.closest("[role=treeitem]");
+if (node) node.setAttribute ("aria-expanded", "true");
+} // while
+
+} // definePath
 
 
 
@@ -218,15 +235,24 @@ return lastChild(node.parentNode);
 function upLevel (node) {
 var root = node.closest ("[role=tree]");
 var up = node.parentNode.closest("[role=treeitem]");
-if (up && root.contains(up)) return up;
-else return node;
+if (up && root.contains(up)) {
+up.setAttribute ("aria-expanded", "false");
+return up;
+} // if
+
+return node;
 } // upLevel
 
 function downLevel (node) {
 var down = node.querySelector("[role=group] > [role=treeitem]");
-if (down) return down;
-else return node;
+if (down) {
+node.setAttribute ("aria-expanded", "true");
+return down;
+} // if
+
+return node;
 } // downLevel
+
 
 /// search
 
@@ -240,15 +266,17 @@ searchText = "";
 } // handleListSearch
 
 function searchList (text) {
+var node;
 if (text) {
 text = text.toLowerCase().trim();
-var node = find (getNodes(container), function (element) {
+
+node = find (getNodes(), function (element) {
 var elementText = element.textContent.toLowerCase().trim();
 //debug ("- ", elementText);
 return elementText.startsWith (text);
 }, indexOf(current()));
 
-if (node) current (node);
+if (node) current (node.closest("li"), "search");
 return node;
 } // if
 
@@ -283,7 +311,7 @@ clearTimeout (searchTimer);
 } // stopTimer
 
 function isAlphanumeric (x) {
-var result = /\w/.test (x);
+var result = /[-+=_.!@#$%^&*()0-9a-zA-Z]/.test (x);
 //alert ("isAlphanumeric " + x + " is " + result);
 return result;
 } // isAlphanumeric
@@ -292,4 +320,4 @@ return result;
 return current;
 } // keyboardNavigation
 
-//alert ("keyboardNavigation.js loaded");
+alert ("keyboardNavigation.js loaded");
